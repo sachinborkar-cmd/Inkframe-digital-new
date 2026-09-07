@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<title>Inkframe Press — Practical Digital Guides</title>
+<meta name="description" content="Practical, evidence-based digital guides for busy professionals. Secure checkout and instant delivery.">
+<link rel="stylesheet" href="/css/theme.css">
+<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Lora'; src: url("../../fonts/lora-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }</style></head>
+<body>
+
+<header class="site-header"></header>
+
+<main class="wrap pb-14">
+
+    <!-- FILTER RAIL -->
+    <section class="rail px-6 md:px-8 py-4" style="border-radius:8px">
+      <div class="rail-scroll">
+        <button class="rail-chip is-active" data-filter="all">All titles</button>
+        <button class="rail-chip" data-filter="performance">Performance</button>
+        <button class="rail-chip" data-filter="focus">Focus &amp; Attention</button>
+        <button class="rail-chip" data-filter="craft">Craft &amp; Career</button>
+        <button class="rail-chip" data-filter="money">Money &amp; Freedom</button>
+        <button class="rail-chip" data-filter="habits">Habits</button>
+        <button class="rail-chip" data-filter="leadership">Leadership</button>
+      </div>
+    </section>
+
+    <section class="pt-8">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p id="title-count" class="text-sm muted font-ui">10 titles</p>
+        <label class="flex items-center gap-2 text-sm muted font-ui">
+          Sort
+          <select class="field !py-2 !w-auto" data-sort><option value="newest">Newest</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="popular">Most popular</option></select>
+        </label>
+      </div>
+    </section>
+
+    <!-- GRID -->
+    <section class="pt-8 pb-14">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-10" data-book-grid>
+
+        <a class="book-card" href="/ebooks/fitness-for-busy-professionals/" data-cat="performance">
+          <div class="cover-img"><img src="/images/fitness-for-busy-professionals-cover.png" alt="Cover of Fitness for Busy Professionals" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Fitness for Busy Professionals</h4>
+          <p class="text-xs muted font-ui mt-1">Inkframe Press</p>
+          <p class="stars mt-1">★★★★★</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹499</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="focus">
+          <div class="cover-img"><img src="../../images/a144e80c-0b44-46a7-91cf-39b1614ef5e0.png" alt="Cover of Deep Work Without the Dogma" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Deep Work Without the Dogma</h4>
+          <p class="text-xs muted font-ui mt-1">Arun Sethi</p>
+          <p class="stars mt-1">★★★★☆</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹399</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="habits">
+          <div class="cover-img"><img src="../../images/88c11b3d-c9d0-44d1-9ecc-82ffcd0ecbea.png" alt="Cover of The Two-Week Reset" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">The Two-Week Reset</h4>
+          <p class="text-xs muted font-ui mt-1">Meera Iyer</p>
+          <p class="stars mt-1">★★★★★</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹349</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="craft">
+          <div class="cover-img"><img src="../../images/80e752ab-ce2f-44a9-bc16-331e1ffa78d5.png" alt="Cover of Quiet Craft" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Quiet Craft</h4>
+          <p class="text-xs muted font-ui mt-1">Devan Rao</p>
+          <p class="stars mt-1">★★★★☆</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹429</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="money">
+          <div class="cover-img"><img src="../../images/a901f1c7-3d22-45ce-9ddc-1970dd801cf3.png" alt="Cover of Price It Like You Mean It" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Price It Like You Mean It</h4>
+          <p class="text-xs muted font-ui mt-1">Nikhil Bose</p>
+          <p class="stars mt-1">★★★★★</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹549</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="leadership">
+          <div class="cover-img"><img src="../../images/6c333c9b-1d6f-461b-9aa7-b93b116b9047.png" alt="Cover of Small Team, Long Game" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Small Team, Long Game</h4>
+          <p class="text-xs muted font-ui mt-1">Sara Kulkarni</p>
+          <p class="stars mt-1">★★★★☆</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹469</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="performance">
+          <div class="cover-img"><img src="../../images/af3c4343-428c-4d91-883b-bba3c224be45.png" alt="Cover of Recovery Is the Work" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Recovery Is the Work</h4>
+          <p class="text-xs muted font-ui mt-1">Rhea Mahadevan</p>
+          <p class="stars mt-1">★★★★★</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹399</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="focus">
+          <div class="cover-img"><img src="../../images/9039353e-439d-4408-a769-7a3291ba6093.png" alt="Cover of The Attention Budget" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">The Attention Budget</h4>
+          <p class="text-xs muted font-ui mt-1">Arun Sethi</p>
+          <p class="stars mt-1">★★★★☆</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹329</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="craft">
+          <div class="cover-img"><img src="../../images/500a8fa4-5762-4809-851c-1e9081815c96.png" alt="Cover of Notes on Finishing" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">Notes on Finishing</h4>
+          <p class="text-xs muted font-ui mt-1">Devan Rao</p>
+          <p class="stars mt-1">★★★★★</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹379</p>
+        </a>
+
+        <a class="book-card" href="/" data-cat="money">
+          <div class="cover-img"><img src="../../images/b28cdfa6-debf-44f7-80fd-30031c876980.png" alt="Cover of The Independent Year" loading="lazy"></div>
+          <h4 class="mt-3 font-ui text-sm font-semibold leading-snug">The Independent Year</h4>
+          <p class="text-xs muted font-ui mt-1">Nikhil Bose</p>
+          <p class="stars mt-1">★★★★☆</p>
+          <p class="font-ui text-sm font-semibold mt-1">₹599</p>
+        </a>
+
+      </div>
+
+      <div id="empty-state" class="hidden card p-12 text-center mt-8">
+        <h3 class="font-semibold text-lg">Nothing here yet</h3>
+        <p class="mt-2 muted">No titles on this shelf so far. Try another filter — or tell us what you'd like us to publish.</p>
+        <a href="/contact" class="btn btn-ghost mt-6">Suggest a topic</a>
+      </div>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section class="news px-8 md:px-14 py-14 text-center" style="border-radius:8px 8px 0 0">
+      <h2 class="text-2xl md:text-3xl font-bold">Know when the next one lands</h2>
+      <p class="mt-3 muted max-w-xl mx-auto">One email a month: new releases, reading notes and the occasional free chapter.</p>
+      <form class="search mt-7 mx-auto" action="/thank-you">
+        <input type="email" name="email" placeholder="Enter your email address" aria-label="Email address" required="">
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </section>
+
+    <footer class="foot px-8 md:px-14 pt-14 pb-8">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 font-ui text-sm">
+        <div>
+          <p class="font-bold text-base">Inkframe Press</p>
+          <p class="mt-3 leading-relaxed" style="color:#c6aca3">Short, dense, practical ebooks for people who do the work.</p>
+        </div>
+        <div>
+          <p class="font-semibold">Catalogue</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href="/">Home</a></li>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/ebooks/fitness-for-busy-professionals/">Featured title</a></li>
+            <li><a href="/library">My library</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-semibold">Company</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-semibold">Reader help</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href="/contact">Download issues</a></li>
+            <li><a href="/contact">Refunds</a></li>
+            <li><a href="/contact">Team licences</a></li>
+            <li><a href="/checkout">Checkout</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="mt-12 pt-6 text-xs font-ui" style="border-top:1px solid rgba(255,255,255,.12);color:#b3968c">
+        © <span id="yr">2026</span> Inkframe Press. All rights reserved.
+      </p>
+    </footer>
+
+</main>
+
+<script src="/js/site.js"></script>
+<script>document.getElementById('yr').textContent=new Date().getFullYear()</script>
+
+</body></html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Sign in — Inkframe Press</title>
+  <meta name="description" content="Sign in to your Inkframe Press customer account.">
+  <link rel="stylesheet" href="/css/theme.css">
+  <script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script>
+</head>
+<body>
+  <header class="site-header"></header>
+
+  <main class="shell py-10 md:py-16">
+    <section class="card p-7 md:p-10 max-w-xl mx-auto">
+      <div class="text-center">
+        <p class="eyebrow">Your account</p>
+        <h1 class="page-title mt-3 text-3xl md:text-4xl font-bold">Customer sign in</h1>
+        <p class="mt-4 muted">Enter your name and email to receive a secure six-digit sign-in code.</p>
+      </div>
+
+      <div class="mt-8">
+        <div id="google-signin-button" class="flex justify-center"><button type="button" class="btn btn-ghost w-full max-w-xs" disabled><strong aria-hidden="true">G</strong> Sign in with Google</button></div>
+        <p id="google-signin-message" class="text-sm text-center muted mt-3" aria-live="polite"></p>
+        <div class="flex items-center gap-4 my-7"><span class="flex-1 border-t" style="border-color:var(--line)"></span><span class="text-xs muted font-ui">OR USE EMAIL OTP</span><span class="flex-1 border-t" style="border-color:var(--line)"></span></div>
+      </div>
+
+      <form id="customer-signin-form" class="mt-8 space-y-5">
+        <div>
+          <label class="label" for="customer-name">Full name</label>
+          <input class="field" id="customer-name" name="full_name" type="text" autocomplete="name" required minlength="2" maxlength="120" placeholder="Your full name">
+        </div>
+        <div>
+          <label class="label" for="customer-email">Email address</label>
+          <input class="field" id="customer-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-full">Send OTP</button>
+        <p id="customer-signin-error" class="text-sm text-center" style="color:var(--accent)" hidden></p>
+        <p class="text-xs muted text-center">By continuing, you agree to our <a class="accent" href="/terms/">Terms</a> and <a class="accent" href="/privacy/">Privacy Policy</a>.</p>
+      </form>
+
+      <form id="customer-otp-form" class="mt-8 space-y-5" hidden>
+        <div class="text-center">
+          <h2 class="text-2xl font-bold">Check your email</h2>
+          <p class="mt-3 muted">Enter the six-digit verification code sent to your email address.</p>
+        </div>
+        <div>
+          <label class="label" for="customer-otp">Verification code</label>
+          <input class="field" id="customer-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" maxlength="6" placeholder="123456">
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-full">Verify and sign in</button>
+        <p id="customer-otp-error" class="text-sm text-center" style="color:var(--accent)" hidden></p>
+      </form>
+
+      <div id="customer-signin-success" hidden class="text-center py-8" role="status">
+        <h2 class="text-2xl font-bold">You’re signed in</h2>
+        <p class="mt-3 muted">Your customer profile has been saved securely.</p>
+        <a href="/library/" class="btn btn-primary mt-6">Open my library</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t" style="border-color:var(--line)">
+    <div class="shell py-10 text-sm muted font-ui flex flex-wrap gap-6 justify-between">
+      <p>© 2026 Inkframe Press.</p>
+      <nav class="flex gap-6"><a class="nav-link" href="/privacy/">Privacy</a><a class="nav-link" href="/terms/">Terms</a><a class="nav-link" href="/contact/">Contact</a></nav>
+    </div>
+  </footer>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/site.js"></script>
+</body>
+</html>

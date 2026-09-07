@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<title>Categories — Inkframe Press</title>
+<meta name="description" content="Six shelves at Inkframe Press: performance, focus, craft, money, habits and leadership. Every new title lands on one of them.">
+<link rel="stylesheet" href="/css/theme.css">
+<style>
+  .cat-card{display:block;padding:2rem;border-radius:18px;border:1px solid var(--line);
+    background:var(--surface);transition:.22s ease}
+  .cat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:#d8cbba}
+  .cat-swatch{height:6px;border-radius:999px;width:56px}
+</style>
+<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Lora'; src: url("../../fonts/lora-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }</style></head>
+<body>
+
+<header class="site-header">
+  <div class="shell flex items-center justify-between h-16">
+    <a href="/" class="font-ui font-bold tracking-tight text-lg">Inkframe<span class="accent">.</span></a>
+    <nav class="hidden md:flex items-center gap-8 font-ui">
+      <a class="nav-link" href="/">Home</a>
+      <a class="nav-link" href="/categories">Categories</a>
+      <a class="nav-link" href="/about">About</a>
+      <a class="nav-link" href="/contact">Contact</a>
+      <a class="nav-link" href="/library">My Library</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="/library" class="nav-link font-ui hidden sm:inline">Sign in</a>
+      <a href="/ebooks" class="btn btn-primary hidden sm:inline-flex">Browse ebooks</a>
+      <button data-menu-toggle="" class="md:hidden p-2 -mr-2" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden border-t" style="border-color:var(--line)">
+    <div class="shell py-4 flex flex-col gap-3 font-ui">
+      <a class="nav-link" href="/">Home</a>
+      <a class="nav-link" href="/categories">Categories</a>
+      <a class="nav-link" href="/about">About</a>
+      <a class="nav-link" href="/contact">Contact</a>
+      <a class="nav-link" href="/library">My Library</a>
+    </div>
+  </div>
+</header>
+
+<main class="shell pb-8 md:pb-12">
+  <div class="plate">
+
+    <section class="rail px-6 md:px-10 py-4">
+      <div class="rail-scroll">
+        <a class="rail-chip is-on" href="/">All titles</a>
+        <a class="rail-chip" href="#performance">Performance</a>
+        <a class="rail-chip" href="#focus">Focus &amp; Attention</a>
+        <a class="rail-chip" href="#craft">Craft &amp; Career</a>
+        <a class="rail-chip" href="#money">Money &amp; Freedom</a>
+        <a class="rail-chip" href="#habits">Habits</a>
+        <a class="rail-chip" href="#leadership">Leadership</a>
+      </div>
+    </section>
+
+    <section class="p-8 md:p-14">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <a id="performance" href="/?category=performance" class="cat-card">
+          <div class="cat-swatch" style="background:linear-gradient(90deg,#5c1a10,#c1442a)"></div>
+          <h2 class="mt-6 text-2xl font-bold">Performance</h2>
+          <p class="mt-2 muted leading-relaxed">Energy, recovery, output and the physiology of good work.</p>
+          <p class="mt-6 text-sm font-ui accent">2 titles →</p>
+        </a>
+
+        <a id="focus" href="/?category=focus" class="cat-card">
+          <div class="cat-swatch" style="background:linear-gradient(90deg,#1d1b17,#4a4a4a)"></div>
+          <h2 class="mt-6 text-2xl font-bold">Focus &amp; Attention</h2>
+          <p class="mt-2 muted leading-relaxed">Deep work, distraction design and defending your calendar.</p>
+          <p class="mt-6 text-sm font-ui accent">2 titles →</p>
+        </a>
+
+        <a id="craft" href="/?category=craft" class="cat-card">
+          <div class="cat-swatch" style="background:linear-gradient(90deg,#2b2440,#8e3a6b)"></div>
+          <h2 class="mt-6 text-2xl font-bold">Craft &amp; Career</h2>
+          <p class="mt-2 muted leading-relaxed">Skill-building, positioning and quiet professional growth.</p>
+          <p class="mt-6 text-sm font-ui accent">2 titles →</p>
+        </a>
+
+        <a id="money" href="/?category=money" class="cat-card">
+          <div class="cat-swatch" style="background:linear-gradient(90deg,#3f2a10,#a9711f)"></div>
+          <h2 class="mt-6 text-2xl font-bold">Money &amp; Freedom</h2>
+          <p class="mt-2 muted leading-relaxed">Pricing, independence and building slack into your finances.</p>
+          <p class="mt-6 text-sm font-ui accent">2 titles →</p>
+        </a>
+
+        <a id="habits" href="/?category=habits" class="cat-card">
+          <div class="cat-swatch" style="background:linear-gradient(90deg,#123028,#2f6b53)"></div>
+          <h2 class="mt-6 text-2xl font-bold">Habits</h2>
+          <p class="mt-2 muted leading-relaxed">Short resets and routines that survive a busy fortnight.</p>
+          <p class="mt-6 text-sm font-ui accent">1 title →</p>
+        </a>
+
+        <a id="leadership" href="/?category=leadership" class="cat-card">
+          <div class="cat-swatch" style="background:linear-gradient(90deg,#0f2a3d,#2c6b8f)"></div>
+          <h2 class="mt-6 text-2xl font-bold">Leadership</h2>
+          <p class="mt-2 muted leading-relaxed">Running small teams for the long game, without the theatre.</p>
+          <p class="mt-6 text-sm font-ui accent">1 title →</p>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="news px-8 md:px-14 py-14 text-center">
+      <h2 class="text-2xl md:text-3xl font-bold">Missing a shelf you'd read?</h2>
+      <p class="mt-3 muted max-w-xl mx-auto">Tell us the topic. Reader suggestions decide roughly half of what we publish next.</p>
+      <a href="/contact" class="btn btn-primary btn-lg mt-7">Suggest a topic</a>
+    </section>
+
+    <footer class="foot px-8 md:px-14 pt-14 pb-8">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 font-ui text-sm">
+        <div>
+          <p class="font-bold text-base">Inkframe Press</p>
+          <p class="mt-3 leading-relaxed" style="color:#c6aca3">Short, dense, practical ebooks for people who do the work.</p>
+        </div>
+        <div>
+          <p class="font-semibold">Catalogue</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href="/ebooks">All ebooks</a></li>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/ebooks/fitness-for-busy-professionals/">Featured title</a></li>
+            <li><a href="/library">My library</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-semibold">Company</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-semibold">Reader help</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href="/contact">Download issues</a></li>
+            <li><a href="/contact">Refunds</a></li>
+            <li><a href="/contact">Team licences</a></li>
+            <li><a href="/checkout">Checkout</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="mt-12 pt-6 text-xs font-ui" style="border-top:1px solid rgba(255,255,255,.12);color:#b3968c">
+        © <span id="yr">2026</span> Inkframe Press. All rights reserved.
+      </p>
+    </footer>
+
+  </div>
+</main>
+
+<script src="/js/site.js"></script>
+<script>document.getElementById('yr').textContent=new Date().getFullYear()</script>
+
+</body></html>

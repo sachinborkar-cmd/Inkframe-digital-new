@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<title>Contact — Inkframe Press</title>
+<link rel="stylesheet" href="/css/theme.css">
+<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Lora'; src: url("../../fonts/lora-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }</style></head>
+<body>
+
+<header class="site-header">
+  <div class="wrap flex items-center justify-between h-16">
+    <a href="/" class="font-ui font-bold tracking-tight text-lg">Inkframe<span class="accent">.</span></a>
+    <nav class="hidden md:flex items-center gap-7 font-ui">
+      <a class="nav-link" href="/">Home</a><a class="nav-link" href="/categories">Categories</a>
+      <a class="nav-link" href="/about">About</a><a class="nav-link" href="/contact">Contact</a>
+      <a class="nav-link" href="/library">My Library</a>
+    </nav>
+    <button data-menu-toggle="" class="md:hidden p-2 -mr-2" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+    </button>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden border-t" style="border-color:var(--line)">
+    <div class="wrap py-4 flex flex-col gap-3 font-ui">
+      <a class="nav-link" href="/">Home</a><a class="nav-link" href="/categories">Categories</a>
+      <a class="nav-link" href="/about">About</a><a class="nav-link" href="/contact">Contact</a>
+      <a class="nav-link" href="/library">My Library</a>
+    </div>
+  </div>
+</header>
+
+<section class="wrap py-16">
+  <div class="max-w-3xl mx-auto">
+    <p class="eyebrow">Say hello</p>
+    <h1 class="page-title mt-3 text-4xl md:text-5xl font-bold">Contact us</h1>
+    <p class="mt-5 muted leading-relaxed">Questions about an order, a download problem, a team licence, or a topic you'd like us to publish — write to us and a human replies, usually within one working day.</p>
+    <div class="mt-8 space-y-4">
+      <div class="card p-5"><p class="font-semibold font-ui">Order &amp; download help</p><p class="text-sm muted mt-1">Include the email you used at checkout.</p></div>
+      <div class="card p-5"><p class="font-semibold font-ui">Team &amp; bulk licences</p><p class="text-sm muted mt-1">Tell us the number of seats and we'll invoice you.</p></div>
+      <div class="card p-5"><p class="font-semibold font-ui">Press &amp; collaborations</p><p class="text-sm muted mt-1">We're open to guest chapters and translations.</p></div>
+    </div>
+  </div>
+
+  <div class="card p-7 md:p-9 mt-12 max-w-3xl mx-auto">
+    <form id="lead-form" class="space-y-5">
+      <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_ACCESS_KEY">
+      <input type="hidden" name="source" value="inkframe-website-contact">
+      <input type="hidden" name="subject" value="New message from the Inkframe website">
+      <div><label class="label" for="name">Name</label><input class="field" id="name" name="name" required="" placeholder="Your name"></div>
+      <div><label class="label" for="email">Email</label><input class="field" id="email" type="email" name="email" required="" placeholder="you@example.com"></div>
+      <div><label class="label" for="topic">Topic</label>
+        <select class="field" id="topic" name="topic"><option>Order or download help</option><option>Team licence</option><option>Suggest a book</option><option>Something else</option></select>
+      </div>
+      <div><label class="label" for="message">Message</label><textarea class="field" id="message" name="message" rows="5" required="" placeholder="How can we help?"></textarea></div>
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+      <button type="submit" class="btn btn-primary btn-lg w-full">Send message</button>
+      <p id="lead-form-error" class="text-sm hidden" style="color:var(--accent)">Something went wrong. Please try again, or email us directly.</p>
+    </form>
+    <div id="lead-form-success" hidden="" class="text-center py-8">
+      <h2 class="text-2xl font-bold">Message sent</h2>
+      <p class="mt-3 muted">Thanks — we've got it and will reply shortly.</p>
+      <a href="/ebooks" class="btn btn-ghost mt-6">Back to the ebooks</a>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t" style="border-color:var(--line)">
+  <div class="wrap py-10 flex flex-col md:flex-row gap-6 justify-between text-sm muted font-ui">
+    <p>© 2025 Inkframe Press. All rights reserved.</p>
+    <nav class="flex flex-wrap gap-6">
+      <a class="nav-link" href="/ebooks">Ebooks</a><a class="nav-link" href="/about">About</a>
+      <a class="nav-link" href="/contact">Contact</a><a class="nav-link" href="/privacy">Privacy</a>
+      <a class="nav-link" href="/terms">Terms</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="/js/site.js"></script>
+
+</body></html>

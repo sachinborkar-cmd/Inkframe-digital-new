@@ -1,0 +1,90 @@
+// Integration checks against the configured local database. Email is stubbed.
+require('dotenv').config({ quiet: true });
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const express = require('express');
+const pool = require('../server/database');
+let sends = 0, failEmail = true;
+require('../server/email').sendBookEmail = async (email, id, amount, pdf) => {
+  sends++;
+  assert.match(email, /@example\.invalid$/);
+  assert.match(pdf, /fitness-for-busy-professionals\.pdf$/);
+  if (failEmail) throw new Error('Simulated SMTP failure');
+};
+const app = express();
+app.use(express.json());
+let userId;
+app.use((req, res, next) => { req.session = {userId:req.headers['x-test-auth'] === 'yes' ? userId : undefined}; next(); });
+app.use('/api/test-checkout', require('../server/routes/test-checkout'));
+app.use('/api/library', require('../server/routes/library'));
+app.use('/api/profile', require('../server/routes/profile'));
+app.use((error, req, res, next) => { console.error(error); res.status(500).json({error:error.message}); });
+let server, couponId;
+const oldMode = process.env.NODE_ENV, oldEnabled = process.env.TEST_PAYMENTS_ENABLED;
+(async () => {
+  try {
+    process.env.NODE_ENV = 'development'; process.env.TEST_PAYMENTS_ENABLED = 'true';
+    await require('../server/schema').ensureSchema();
+    const token = crypto.randomUUID();
+    const [user] = await pool.execute('insert into users(email,is_verified) values (?,true)', [`checkout-${token}@example.invalid`]);
+    userId = user.insertId;
+    const code = 'TEST-' + token.slice(0,8);
+    const [coupon] = await pool.execute("insert into coupons(code,discount_type,discount_value,usage_limit) values (?,'percent',20,1)", [code]);
+    couponId = coupon.insertId;
+    server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
+    const origin = `http://127.0.0.1:${server.address().port}`;
+    const payload = {checkout_key:token,slugs:['fitness-for-busy-professionals'],full_name:'Checkout Test',phone:'',country:'India',terms:true,coupon:code};
+    async function request(path, body, auth = true) {
+      const r = await fetch(origin+path, {method:body ? 'POST':'GET',headers:{'Content-Type':'application/json','x-test-auth':auth?'yes':'no'},body:body?JSON.stringify(body):undefined});
+      return {status:r.status,body:await r.json()};
+    }
+    assert.equal((await request('/api/test-checkout',payload,false)).status,401);
+    assert.equal((await request('/api/profile',undefined,false)).status,401);
+    assert.equal((await request('/api/profile',{full_name:'Unauthorized',mobile:''},false)).status,401);
+    assert.equal((await request('/api/library/fitness-for-busy-professionals/download')).status,403);
+    assert.equal((await request('/api/test-checkout',{...payload,terms:false})).status,400);
+    assert.equal((await request('/api/test-checkout',{...payload,slugs:['wrong-book']})).status,400);
+    assert.equal((await request('/api/test-checkout',{...payload,coupon:'NOT-A-COUPON'})).status,400);
+    process.env.NODE_ENV='production';
+    assert.equal((await request('/api/test-checkout',payload)).status,403);
+    process.env.NODE_ENV='development';
+    const results = await Promise.all([request('/api/test-checkout',payload),request('/api/test-checkout',payload)]);
+    results.forEach(result => assert.equal(result.status,201));
+    const order = results[0].body.order;
+    assert.equal(order.id, results[1].body.order.id);
+    assert.equal(order.status,'paid'); assert.equal(order.email_sent_at,null); assert.equal(sends,1);
+    const [[book]] = await pool.execute('select price_paise from ebooks where slug=?',payload.slugs);
+    assert.equal(order.amount_paise,book.price_paise-Math.floor(book.price_paise*0.2));
+    const [[usage]] = await pool.execute('select used_count from coupons where id=?',[couponId]);
+    assert.equal(usage.used_count,1);
+    assert.equal((await request('/api/test-checkout/0')).status,404);
+    assert.equal((await request('/api/test-checkout/'+order.id,undefined,false)).status,401);
+    await pool.execute('update orders set email_attempt_at=date_sub(now(),interval 3 minute) where id=?',[order.id]);
+    failEmail=false;
+    const retry=await request('/api/test-checkout/'+order.id+'/retry-email',{});
+    assert.ok(retry.body.order.email_sent_at); assert.equal(sends,2);
+    await request('/api/test-checkout/'+order.id+'/retry-email',{}); assert.equal(sends,2);
+    const download=await fetch(origin+'/api/library/fitness-for-busy-professionals/download',{headers:{'x-test-auth':'yes'}});
+    assert.equal(download.status,200); assert.match(download.headers.get('content-disposition'),/attachment/);
+    assert.equal(Buffer.from(await download.arrayBuffer()).subarray(0,5).toString(),'%PDF-');
+    const library=await request('/api/library');
+    assert.equal(library.body.books[0].pdf_path,'/api/library/fitness-for-busy-professionals/download');
+    assert.equal(library.body.orders[0].id,order.id);
+    assert.equal(library.body.orders[0].payment_method,'test');
+    assert.equal((await request('/api/profile')).body.profile.full_name,'Checkout Test');
+    assert.equal((await request('/api/profile',{full_name:'A',mobile:''})).status,400);
+    assert.equal((await request('/api/profile',{full_name:'Updated Customer',mobile:'invalid'})).status,400);
+    assert.equal((await request('/api/profile',{full_name:'Updated Customer',mobile:'+91 9876543210',user_id:0})).status,200);
+    const saved=(await request('/api/profile')).body.profile;
+    assert.equal(saved.full_name,'Updated Customer');
+    assert.equal(saved.mobile,'+91 9876543210');
+    assert.match(saved.email,/@example\.invalid$/);
+    console.log('PASS: checkout, email retry, private downloads, purchase history, authenticated profile persistence and validation.');
+  } finally {
+    if (server) await new Promise(resolve => server.close(resolve));
+    if (userId) { await pool.execute('delete from orders where user_id=?',[userId]); await pool.execute('delete from users where id=?',[userId]); }
+    if (couponId) await pool.execute('delete from coupons where id=?',[couponId]);
+    process.env.NODE_ENV=oldMode; process.env.TEST_PAYMENTS_ENABLED=oldEnabled;
+    await pool.end();
+  }
+})().catch(error => {console.error(error);process.exitCode=1;});

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Confirm email — Inkframe Press</title>
+  <meta name="description" content="Confirm your email using the Inkframe Press verification code.">
+  <link rel="stylesheet" href="/css/theme.css">
+  <script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script>
+</head>
+<body>
+  <header class="site-header"></header>
+
+  <main class="shell py-10 md:py-16">
+    <section class="card p-7 md:p-10 max-w-xl mx-auto">
+      <div class="text-center">
+        <p class="eyebrow">Email verification</p>
+        <h1 class="page-title mt-3 text-3xl md:text-4xl font-bold">Enter your OTP</h1>
+        <p class="mt-4 muted">Enter your email address and the verification code Supabase sent to you.</p>
+      </div>
+
+      <form id="confirm-signup-form" class="mt-8 space-y-5">
+        <div>
+          <label class="label" for="confirm-email">Email address</label>
+          <input class="field" id="confirm-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        </div>
+        <div>
+          <label class="label" for="confirm-token">Verification code</label>
+          <input class="field" id="confirm-token" name="token" type="text" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" maxlength="6" placeholder="123456">
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-full">Verify OTP</button>
+        <p id="confirm-signup-error" class="text-sm text-center" style="color:var(--accent)" hidden></p>
+      </form>
+
+      <div id="confirm-signup-success" hidden class="text-center py-8" role="status">
+        <h2 class="text-2xl font-bold">Email verified</h2>
+        <p class="mt-3 muted">You are now securely signed in.</p>
+        <a href="/library/" class="btn btn-primary mt-6">Open my library</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/site.js"></script>
+</body>
+</html>

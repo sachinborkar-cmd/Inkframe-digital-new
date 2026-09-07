@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<title>Thank you — Inkframe Press</title>
+<link rel="stylesheet" href="/css/theme.css">
+<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Lora'; src: url("../../fonts/lora-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("../../fonts/lora-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Sora'; src: url("../../fonts/sora-wght--extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }</style></head>
+<body>
+<header class="site-header">
+  <div class="wrap flex items-center justify-between h-16">
+    <a href="/" class="font-ui font-bold tracking-tight text-lg">Inkframe<span class="accent">.</span></a>
+    <a class="nav-link font-ui" href="/library">My Library</a>
+  </div>
+</header>
+
+<section class="wrap py-24 text-center max-w-2xl">
+  <p class="eyebrow">Order details</p>
+  <h1 class="page-title mt-4 text-4xl md:text-5xl font-bold">Checking your order...</h1>
+  <p class="mt-5 muted text-lg">Please wait while we load your payment and delivery status.</p>
+  <p id="test-order-note" class="mt-4 text-sm font-ui" hidden></p>
+  <div class="mt-6"><a hidden id="order-download" class="btn btn-primary" href="/api/library/fitness-for-busy-professionals/download">Download PDF</a> <button hidden id="retry-email" class="btn btn-ghost">Retry email delivery</button></div>
+  <div class="mt-9 flex flex-wrap gap-3 justify-center">
+    <a href="/library" class="btn btn-primary btn-lg">Go to my library</a>
+    <a href="/ebooks" class="btn btn-ghost btn-lg">Keep browsing</a>
+  </div>
+  <div class="card p-6 mt-12 text-left">
+    <p class="font-ui font-semibold">Didn't get the email?</p>
+    <p class="text-sm muted mt-2">Check spam and promotions first. If it still hasn't arrived after ten minutes, <a href="/contact" class="accent">contact us</a> with the email you used and we'll resend it.</p>
+  </div>
+  <section class="mt-14 text-left"><p class="eyebrow">Complete your collection</p><h2 class="text-2xl font-bold mt-2">Keep the momentum going</h2><div class="card p-6 mt-5"><div class="flex flex-col sm:flex-row gap-5 items-center"><div class="w-20 h-24 rounded-lg bg-[#2b0d08] text-white flex items-center justify-center text-xs font-ui text-center p-3">Meal Prep Planner</div><div class="flex-1"><h3 class="font-bold">90-Minute Meal Prep Planner</h3><p class="muted text-sm mt-1">A practical companion for putting the nutrition chapter into action.</p></div><a href="/cart/" class="btn btn-ghost">Add for ₹149</a></div></div></section>
+</section>
+
+<footer class="border-t" style="border-color:var(--line)">
+  <div class="wrap py-10 text-sm muted font-ui flex flex-wrap gap-6 justify-between">
+    <p>© 2025 Inkframe Press.</p>
+    <nav class="flex gap-6"><a class="nav-link" href="/privacy">Privacy</a><a class="nav-link" href="/terms">Terms</a><a class="nav-link" href="/contact">Contact</a></nav>
+  </div>
+</footer>
+<script src="/js/site.js"></script>
+<script src="/js/order-confirmation.js"></script>
+
+</body></html>
