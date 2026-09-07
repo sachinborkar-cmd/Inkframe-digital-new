@@ -18,7 +18,7 @@ if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
 }
 
 const app = express();
-const root = path.resolve(__dirname, '..');
+const root = path.resolve(__dirname, '..', 'client');
 const port = Number(process.env.PORT) || 8000;
 const production = process.env.NODE_ENV === 'production';
 
@@ -77,19 +77,28 @@ app.get(['/library', '/library/'], (request, response) => {
 
 app.get(['/cart', '/cart/'], (request, response) => {
   if (!request.session.userId) return response.redirect('/signin/?next=/cart/');
-  response.sendFile(path.join(root, 'cart', 'index.html'));
+  response.sendFile(path.join(root, 'pages', 'cart', 'index.html'));
 });
 
 app.use('/admin', (request, response) => {
   if (!request.session.userId) return response.redirect('/signin/?next=/admin/');
   require('./middleware').requireAdmin(request, response, error => {
     if (error) return response.status(500).send('Unable to check administrator access.');
-    response.sendFile(path.join(root, 'admin', 'index.html'));
+    response.sendFile(path.join(root, 'pages', 'admin', 'index.html'));
   });
 });
 
 // Serve only explicit public directories; never expose the workspace root.
-for (const directory of ['css','js','fonts','images','assets','about','cart','categories','checkout','confirm-signup','contact','ebooks','library','privacy','product','signin','terms','thank-you']) {
+for (const directory of ['css','js','fonts','images','uploads']) {
+  const files = express.static(path.join(root, 'assets', directory), {dotfiles:'deny'});
+  app.use('/assets/'+directory, files);
+  // Preserve older URLs used by saved book records and existing links.
+  if (directory !== 'uploads') app.use('/'+directory, files);
+}
+for (const directory of ['about','cart','categories','checkout','confirm-signup','contact','privacy','product','signin','terms','thank-you']) {
+  app.use('/'+directory, express.static(path.join(root,'pages',directory), {extensions:['html'],index:'index.html',dotfiles:'deny'}));
+}
+for (const directory of ['ebooks','library']) {
   app.use('/'+directory, express.static(path.join(root,directory), {extensions:['html'],index:'index.html',dotfiles:'deny'}));
 }
 app.get(['/', '/index.html'], (request,response) => response.sendFile(path.join(root,'index.html')));

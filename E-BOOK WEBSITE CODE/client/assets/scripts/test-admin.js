@@ -5,21 +5,21 @@ const fs=require('node:fs/promises');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const express=require('express');
-const pool=require('../server/database');
-const email=require('../server/email');let deliveries=0;
+const pool=require('../../../server/database');
+const email=require('../../../server/email');let deliveries=0;
 email.sendBookEmail=async()=>{deliveries++;};email.sendAdminInvite=async()=>{};
 const app=express();app.use(express.json({limit:'20kb'}));
 const sessions={guest:{},owner:{},customer:{},unverified:{}};
 app.use((req,res,next)=>{req.session=sessions[req.headers['x-test-role']||'guest'];next();});
-app.use('/api/admin',require('../server/routes/admin'));
-app.use('/api/test-checkout',require('../server/routes/test-checkout'));
-app.use('/api/library',require('../server/routes/library'));
+app.use('/api/admin',require('../../../server/routes/admin'));
+app.use('/api/test-checkout',require('../../../server/routes/test-checkout'));
+app.use('/api/library',require('../../../server/routes/library'));
 app.use((err,req,res,next)=>res.status(err.status||500).json({error:err.message}));
 const userIds=[],bookIds=[],categoryIds=[],couponIds=[],files=[];
 let server;
 (async()=>{
  try{
-  await require('../server/schema').ensureSchema();
+  await require('../../../server/schema').ensureSchema();
   const key=crypto.randomUUID();process.env.ADMIN_EMAIL='owner-'+key+'@example.invalid';process.env.NODE_ENV='development';process.env.TEST_PAYMENTS_ENABLED='true';
   for(const role of ['owner','customer','unverified']){const address=role==='owner'?process.env.ADMIN_EMAIL:role+'-'+key+'@example.invalid';const [r]=await pool.execute('insert into users(email,is_verified) values (?,?)',[address,role==='unverified'?0:1]);userIds.push(r.insertId);sessions[role]={userId:r.insertId,email:address,isAdmin:true};}
   server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});const base='http://127.0.0.1:'+server.address().port;
@@ -67,7 +67,7 @@ let server;
   for(const id of couponIds)await pool.execute('delete from coupons where id=?',[id]);
   for(const session of Object.values(sessions))if(session.email)await pool.execute('delete from admin_members where email=?',[session.email]);
   for(const id of userIds)await pool.execute('delete from users where id=?',[id]);
-  const root=path.resolve(__dirname,'../server/private/ebooks');for(const file of files){const target=path.resolve(__dirname,'..',file);if(!target.startsWith(root+path.sep))throw Error('Unsafe cleanup path');await fs.unlink(target);}
+  const root=path.resolve(__dirname,'../../../server/private/ebooks');for(const file of files){const target=path.resolve(__dirname,'../../..',file);if(!target.startsWith(root+path.sep))throw Error('Unsafe cleanup path');await fs.unlink(target);}
   await pool.end();
  }
 })().catch(error=>{console.error(error);process.exitCode=1;});

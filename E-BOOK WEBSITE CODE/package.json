@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "node --watch --watch-path=server --watch-path=.env server/server.js",
     "start": "node server/server.js",
-    "check": "node --check server/server.js && node --check js/auth.js && node --check js/site.js",
-    "check:email": "node scripts/check-email.js",
-    "test:checkout": "node scripts/test-checkout.js",
-    "test:admin": "node scripts/test-admin.js"
+    "check": "node --check server/server.js && node --check client/assets/js/auth.js && node --check client/assets/js/site.js",
+    "check:email": "node client/assets/scripts/check-email.js",
+    "test:checkout": "node client/assets/scripts/test-checkout.js",
+    "test:admin": "node client/assets/scripts/test-admin.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -3,9 +3,9 @@ require('dotenv').config({ quiet: true });
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const express = require('express');
-const pool = require('../server/database');
+const pool = require('../../../server/database');
 let sends = 0, failEmail = true;
-require('../server/email').sendBookEmail = async (email, id, amount, pdf) => {
+require('../../../server/email').sendBookEmail = async (email, id, amount, pdf) => {
   sends++;
   assert.match(email, /@example\.invalid$/);
   assert.match(pdf, /fitness-for-busy-professionals\.pdf$/);
@@ -15,16 +15,16 @@ const app = express();
 app.use(express.json());
 let userId;
 app.use((req, res, next) => { req.session = {userId:req.headers['x-test-auth'] === 'yes' ? userId : undefined}; next(); });
-app.use('/api/test-checkout', require('../server/routes/test-checkout'));
-app.use('/api/library', require('../server/routes/library'));
-app.use('/api/profile', require('../server/routes/profile'));
+app.use('/api/test-checkout', require('../../../server/routes/test-checkout'));
+app.use('/api/library', require('../../../server/routes/library'));
+app.use('/api/profile', require('../../../server/routes/profile'));
 app.use((error, req, res, next) => { console.error(error); res.status(500).json({error:error.message}); });
 let server, couponId;
 const oldMode = process.env.NODE_ENV, oldEnabled = process.env.TEST_PAYMENTS_ENABLED;
 (async () => {
   try {
     process.env.NODE_ENV = 'development'; process.env.TEST_PAYMENTS_ENABLED = 'true';
-    await require('../server/schema').ensureSchema();
+    await require('../../../server/schema').ensureSchema();
     const token = crypto.randomUUID();
     const [user] = await pool.execute('insert into users(email,is_verified) values (?,true)', [`checkout-${token}@example.invalid`]);
     userId = user.insertId;

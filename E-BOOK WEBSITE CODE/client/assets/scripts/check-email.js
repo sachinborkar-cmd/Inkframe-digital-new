@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { verifyEmailTransport } = require('../server/email');
+const { verifyEmailTransport } = require('../../../server/email');
 
 verifyEmailTransport()
   .then(() => console.log('SMTP authentication and connection succeeded.'))

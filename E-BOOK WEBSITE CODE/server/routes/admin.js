@@ -57,7 +57,7 @@ router.post('/uploads',express.raw({type:['application/pdf','image/png','image/j
  if(!ext)fail('File contents do not match its type.');
  const paid=req.query.kind==='paid';if(paid&&ext!=='pdf')fail('Paid books must be PDF files.');
  const dir=paid?'server/private/ebooks':'assets/uploads';const name=crypto.randomUUID()+'.'+ext;
- const absolute=path.resolve(__dirname,'../..',dir);await fs.mkdir(absolute,{recursive:true});await fs.writeFile(path.join(absolute,name),data,{flag:'wx'});
+ const absolute=path.resolve(__dirname,'../..',paid?dir:'client/'+dir);await fs.mkdir(absolute,{recursive:true});await fs.writeFile(path.join(absolute,name),data,{flag:'wx'});
  await audit(req,'File uploaded',{kind:paid?'paid':'public',name});res.status(201).json({path:(paid?'':'/')+dir+'/'+name});
 }));
 router.get('/categories',wrap(async(req,res)=>{const [categories]=await pool.query('select c.*,(select count(*) from ebooks e where e.category_id=c.id) products from categories c order by sort_order,name');res.json({categories});}));

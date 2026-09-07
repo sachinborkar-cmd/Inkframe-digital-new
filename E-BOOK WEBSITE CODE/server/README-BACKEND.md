@@ -18,13 +18,13 @@ npm install
 
 ## 3. Create the MySQL database
 
-Import the included schema from PowerShell:
+From the project root, import the included schema using Command Prompt (cmd):
 
 ```powershell
-mysql -u root -p < database.sql
+mysql -u root -p < server/database.sql
 ```
 
-Or open MySQL Workbench, choose **Server > Data Import**, and import `database.sql`.
+Or open MySQL Workbench, choose **Server > Data Import**, and import `server/database.sql`.
 
 The script creates the `ebook_store` database and these tables:
 

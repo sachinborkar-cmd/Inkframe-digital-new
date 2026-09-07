@@ -1,10 +1,10 @@
-@font-face{font-family:"Lora";src:url("/fonts/lora-regular.ttf") format("truetype");font-weight:400;font-display:swap}
-@font-face{font-family:"Lora";src:url("/fonts/lora-semibold.ttf") format("truetype");font-weight:600;font-display:swap}
-@font-face{font-family:"Lora";src:url("/fonts/lora-bold.ttf") format("truetype");font-weight:700;font-display:swap}
-@font-face{font-family:"Sora";src:url("/fonts/sora-wght--regular.ttf") format("truetype");font-weight:400;font-display:swap}
-@font-face{font-family:"Sora";src:url("/fonts/sora-wght--medium.ttf") format("truetype");font-weight:500;font-display:swap}
-@font-face{font-family:"Sora";src:url("/fonts/sora-wght--semibold.ttf") format("truetype");font-weight:600;font-display:swap}
-@font-face{font-family:"Sora";src:url("/fonts/sora-wght--bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Lora";src:url("/assets/fonts/lora-regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Lora";src:url("/assets/fonts/lora-semibold.ttf") format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:"Lora";src:url("/assets/fonts/lora-bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Sora";src:url("/assets/fonts/sora-wght--regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Sora";src:url("/assets/fonts/sora-wght--medium.ttf") format("truetype");font-weight:500;font-display:swap}
+@font-face{font-family:"Sora";src:url("/assets/fonts/sora-wght--semibold.ttf") format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:"Sora";src:url("/assets/fonts/sora-wght--bold.ttf") format("truetype");font-weight:700;font-display:swap}
 
 :root{
   --bg:#faf7f2;

@@ -1,3 +1,6 @@
 .env
 node_modules/
 npm-debug.log*
+.tmp/
+/backup-before-restructure/
+/backup-git-before-restructure/

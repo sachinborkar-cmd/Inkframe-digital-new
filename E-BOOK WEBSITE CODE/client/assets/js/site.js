@@ -2,7 +2,7 @@ window.InkframeSession = fetch('/api/auth/session', {credentials:'same-origin', 
 
 window.InkframeCart = (function () {
   var products = {
-    'fitness-for-busy-professionals': { id: 'fitness-for-busy-professionals', title: 'Fitness for Busy Professionals', price: 499, detail: '22-page PDF ebook', image: '/images/fitness-for-busy-professionals-cover.png', url: '/ebooks/fitness-for-busy-professionals/' }
+    'fitness-for-busy-professionals': { id: 'fitness-for-busy-professionals', title: 'Fitness for Busy Professionals', price: 499, detail: '22-page PDF ebook', image: '/assets/images/fitness-for-busy-professionals-cover.png', url: '/ebooks/fitness-for-busy-professionals/' }
   };
   function get() { try { var ids=JSON.parse(localStorage.getItem('inkframeCart') || '[]'); return Array.isArray(ids)?ids.filter(function(id){return typeof id==='string'}):[]; } catch (_) { return []; } }
   window.InkframeCatalogue = fetch('/api/store/products').then(function(r){if(!r.ok)throw Error('Could not load the catalogue.');return r.json();}).then(function(data){
