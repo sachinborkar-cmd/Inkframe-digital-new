@@ -88,3 +88,13 @@ empty folder, then run it there. Keep the current project and backups until the
 restored copy is checked. The folder backup does not snapshot the live MySQL
 database; do not replace the parent Git metadata casually because it may cover
 other files outside this project.
+
+### Product landing pages
+
+In Admin > Products > Add new (or Edit), enter the title, author, description and INR price, then upload the cover and private paid PDF. Optionally attach a sample PDF, up to 12 preview-page images with captions, and up to 10 testimonials with reader names and quotes. Preview images and sample PDFs are public; upload only the pages intended as samples. Remove buttons detach optional content when you save.
+
+Publish the product to make its dedicated `/product/?slug=your-product-slug` page available from the catalogue. The page shows the saved cover, description, price, purchase actions, previews and testimonials; empty preview and testimonial sections are hidden. The old fitness ebook URL redirects to its managed product page. Startup schema migration adds the new JSON columns to existing databases.
+
+Run `npm run test:product` for customer-rendering checks and `npm run test:admin` for database-backed saving, validation and visibility checks.
+
+See [the security implementation and API audit](SECURITY-IMPLEMENTATION.md) for password recovery, database admin roles, analytics, private-file protections, migration behavior, test commands, and the outstanding live-payment integration.

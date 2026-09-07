@@ -1,33 +1,28 @@
-function requireAuth(request, response, next) {
-  if (!request.session || !request.session.userId) {
-    return response.status(401).json({ error: 'Authentication required.' });
-  }
-  next();
+const pool = require('./database');
+async function sessionUser(request) {
+  if(!request.session?.userId)return null;
+  const [[user]]=await pool.execute('select id,email,is_verified,is_active,role,is_owner,session_version from users where id=?',[request.session.userId]);
+  if(!user||!user.is_verified||!user.is_active||user.session_version!==Number(request.session.sessionVersion||0))return null;
+  return user;
 }
-
-async function adminAccess(userId) {
-    if (!userId) return {isOwner:false,isAdmin:false};
-    const pool = require('./database');
-    const [[user]] = await pool.execute('select email,is_verified from users where id=?', [userId]);
-    const owner = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
-    const email = user && user.email.toLowerCase();
-    const isOwner = Boolean(owner && email === owner && user.is_verified);
-    let member = false;
-    if (user && user.is_verified && !isOwner) {
-      const [rows] = await pool.execute('select email from admin_members where email=?', [email]);
-      member = rows.length > 0;
-    }
-    return {isOwner,isAdmin:isOwner||member};
+async function requireAuth(request,response,next){
+  try{
+    const user=await sessionUser(request);
+    if(!user)return response.status(401).json({error:'Authentication required. Please sign in again.'});
+    request.user=user;response.setHeader('Cache-Control','no-store');next();
+  }catch(error){next(error);}
 }
-async function requireAdmin(request, response, next) {
-  if (!request.session || !request.session.userId) return response.status(401).json({ error: 'Authentication required.' });
-  try {
-    const access = await adminAccess(request.session.userId);
-    request.isOwner = access.isOwner;
-    if (!access.isAdmin) return response.status(403).json({ error: 'Administrator access required.' });
-    response.setHeader('Cache-Control', 'no-store');
-    next();
-  } catch(error) { next(error); }
+async function adminAccess(userId){
+  if(!userId)return {isOwner:false,isAdmin:false};
+  const [[u]]=await pool.execute('select role,is_owner,is_verified,is_active from users where id=?',[userId]);
+  const isAdmin=Boolean(u&&u.is_verified&&u.is_active&&u.role==='ADMIN');
+  return {isOwner:isAdmin&&Boolean(u.is_owner),isAdmin};
 }
-
-module.exports = { requireAuth, requireAdmin, adminAccess };
+function requireAdmin(request,response,next){
+  return requireAuth(request,response, error=>{
+    if(error)return next(error);
+    if(request.user.role!=='ADMIN')return response.status(403).json({error:'Administrator access required.'});
+    request.isOwner=Boolean(request.user.is_owner);next();
+  });
+}
+module.exports={requireAuth,requireAdmin,adminAccess,sessionUser};

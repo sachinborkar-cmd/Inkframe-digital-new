@@ -20,14 +20,13 @@ async function verifyEmailTransport() {
   return transporter.verify();
 }
 
-async function sendOtpEmail(email, otp) {
+async function sendOtpEmail(email, otp, purpose = 'SIGN_IN') {
   const storeName = process.env.SMTP_FROM_NAME || 'Inkframe Press';
   await transporter.sendMail({
     from: `"${storeName}" <${process.env.SMTP_USER}>`,
     to: email,
     subject: `${otp} is your ${storeName} verification code`,
-    text: `Your ${storeName} verification code is ${otp}. It expires in 10 minutes. Do not share this code.`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>${storeName}</h2><p>Use this verification code to sign in:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${otp}</p><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`
+    text: `Your ${storeName} ${purpose === 'PASSWORD_RESET' ? 'password reset' : 'sign-in'} code is ${otp}. It expires in 10 minutes. Do not share this code. If you did not request it, ignore this email.`
   });
 }
 

@@ -46,6 +46,8 @@ create table if not exists ebooks (
   price_paise int unsigned not null,
   description text null,
   cover_path varchar(500) null,
+  preview_pages json null,
+  testimonials json null,
   pdf_path varchar(500) null,
   epub_path varchar(500) null,
   status enum('draft', 'published', 'archived') not null default 'published',

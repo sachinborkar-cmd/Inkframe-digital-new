@@ -8,7 +8,10 @@
     "check": "node --check server/server.js && node --check client/assets/js/auth.js && node --check client/assets/js/site.js",
     "check:email": "node client/assets/scripts/check-email.js",
     "test:checkout": "node client/assets/scripts/test-checkout.js",
-    "test:admin": "node client/assets/scripts/test-admin.js"
+    "test:admin": "node client/assets/scripts/test-admin.js",
+    "test:product": "node client/assets/scripts/test-product.js",
+    "test:security": "node client/assets/scripts/test-security.js",
+    "test:http": "node client/assets/scripts/test-http.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

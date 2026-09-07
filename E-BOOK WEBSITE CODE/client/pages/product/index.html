@@ -1,1 +1,41 @@
-﻿<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ebook | Inkframe Press</title><link rel="stylesheet" href="/assets/css/theme.css"><script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script></head><body><header class="site-header"></header><main class="wrap py-14"><p id="product-status" role="status">Loading ebook...</p><section id="product-detail" hidden class="grid md:grid-cols-2 gap-10"><div><img id="product-cover" class="w-64 rounded-lg shadow-xl" alt=""></div><div><h1 id="product-title" class="text-4xl font-bold"></h1><p id="product-author" class="muted mt-4"></p><p id="product-description" class="mt-6" style="white-space:pre-wrap"></p><p id="product-price" class="text-3xl font-bold mt-6"></p><div class="flex flex-wrap gap-3 mt-6"><a id="product-buy" class="btn btn-primary" data-buy-now href="/checkout/">Buy Now</a><button id="product-cart" class="btn btn-ghost" data-add-cart>Add to Cart</button><a id="product-sample" class="btn btn-ghost" hidden>Read sample</a></div><p class="muted mt-5">PDF ebook delivered by email after checkout.</p></div></section></main><script src="/assets/js/site.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ebook | Inkframe Press</title>
+  <meta name="description" content="Explore this ebook, read sample pages and discover what readers have to say.">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/product.css">
+  <script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap product-page">
+  <a class="product-back" href="/ebooks/">&larr; Browse all ebooks</a>
+  <p id="product-status" role="status">Loading ebook...</p>
+  <article id="product-detail" hidden>
+    <section class="product-hero" aria-labelledby="product-title">
+      <div class="product-art"><img id="product-cover" alt=""><span id="product-cover-placeholder" hidden>PDF ebook</span></div>
+      <div class="product-intro">
+        <p class="product-eyebrow">THE INKFRAME BOOKSHELF <span id="product-category"></span></p>
+        <h1 id="product-title"></h1>
+        <p id="product-author" class="muted"></p>
+        <nav class="product-jump" aria-label="Explore this ebook"><a href="#about-book">About the book</a><a id="preview-jump" href="#preview-pages" hidden>Preview pages</a><a id="testimonial-jump" href="#reader-testimonials" hidden>Reader testimonials</a></nav>
+        <div class="product-purchase">
+          <p class="product-eyebrow">DIGITAL EDITION &middot; PDF</p>
+          <p id="product-price"></p>
+          <div class="product-actions"><a id="product-buy" class="btn btn-primary" data-buy-now href="/checkout/">Buy now</a><button id="product-cart" type="button" class="btn btn-ghost" data-add-cart>Add to cart</button></div>
+          <p class="muted">Your ebook is delivered by email after checkout.</p>
+        </div>
+      </div>
+    </section>
+    <section id="about-book" class="product-section" aria-labelledby="about-title"><p class="product-eyebrow">A CLOSER LOOK</p><h2 id="about-title">About the book</h2><p id="product-description"></p></section>
+    <section id="preview-pages" class="product-section" hidden aria-labelledby="preview-title"><p class="product-eyebrow">LOOK INSIDE</p><h2 id="preview-title">Read before you buy</h2><p class="muted">Explore a few pages from the book. Select any page to see it in full.</p><div id="product-previews" class="product-previews"></div><a id="product-sample" class="btn btn-ghost" target="_blank" rel="noopener" hidden>Read sample PDF &nearr;</a></section>
+    <section id="reader-testimonials" class="product-section" hidden aria-labelledby="testimonials-title"><p class="product-eyebrow">FROM OUR READERS</p><h2 id="testimonials-title">Reader testimonials</h2><div id="product-testimonials" class="product-testimonials"></div></section>
+  </article>
+  <noscript>Please enable JavaScript to view the product details and purchase this ebook.</noscript>
+</main>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

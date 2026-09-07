@@ -1,4 +1,4 @@
-﻿// Local integration tests. Temporary records/files are removed; outgoing email is mocked.
+// Local integration tests. Temporary records/files are removed; outgoing email is mocked.
 require('dotenv').config({quiet:true});
 const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
@@ -8,10 +8,11 @@ const express=require('express');
 const pool=require('../../../server/database');
 const email=require('../../../server/email');let deliveries=0;
 email.sendBookEmail=async()=>{deliveries++;};email.sendAdminInvite=async()=>{};
-const app=express();app.use(express.json({limit:'20kb'}));
+const app=express();app.use(express.json({limit:'128kb'}));
 const sessions={guest:{},owner:{},customer:{},unverified:{}};
 app.use((req,res,next)=>{req.session=sessions[req.headers['x-test-role']||'guest'];next();});
 app.use('/api/admin',require('../../../server/routes/admin'));
+app.use('/api/store',require('../../../server/routes/store'));
 app.use('/api/test-checkout',require('../../../server/routes/test-checkout'));
 app.use('/api/library',require('../../../server/routes/library'));
 app.use((err,req,res,next)=>res.status(err.status||500).json({error:err.message}));
@@ -22,11 +23,12 @@ let server;
   await require('../../../server/schema').ensureSchema();
   const key=crypto.randomUUID();process.env.ADMIN_EMAIL='owner-'+key+'@example.invalid';process.env.NODE_ENV='development';process.env.TEST_PAYMENTS_ENABLED='true';
   for(const role of ['owner','customer','unverified']){const address=role==='owner'?process.env.ADMIN_EMAIL:role+'-'+key+'@example.invalid';const [r]=await pool.execute('insert into users(email,is_verified) values (?,?)',[address,role==='unverified'?0:1]);userIds.push(r.insertId);sessions[role]={userId:r.insertId,email:address,isAdmin:true};}
+  await pool.execute("update users set role='ADMIN',is_owner=1 where id=?",[sessions.owner.userId]);
   server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});const base='http://127.0.0.1:'+server.address().port;
   async function request(route,body,method='GET',role='owner',csrf=true){const headers={'x-test-role':role};if(csrf)headers['X-CSRF-Token']=sessions[role].adminCsrf||'';if(body)headers['Content-Type']='application/json';const r=await fetch(base+route,{method,headers,body:body?JSON.stringify(body):undefined});const data=await r.json();return {status:r.status,data};}
   assert.equal((await request('/api/admin/me',null,'GET','guest')).status,401);
   assert.equal((await request('/api/admin/me',null,'GET','customer')).status,403);
-  assert.equal((await request('/api/admin/me',null,'GET','unverified')).status,403);
+  assert.equal((await request('/api/admin/me',null,'GET','unverified')).status,401);
   assert.equal((await request('/api/admin/me')).data.isOwner,true);
   assert.equal((await request('/api/admin/products',{},'POST','owner',false)).status,403);
   assert.equal((await request('/api/admin/products',{title:'Bad',price:'abc',status:'draft'},'POST')).status,400);
@@ -38,6 +40,24 @@ let server;
   assert.equal((await request('/api/admin/products',{...product,pdf_path:'../../.env'},'POST')).status,400);
   for(let i=0;i<2;i++){const r=await request('/api/admin/products',{...product,title:product.title+i,slug:'audit-'+key+'-'+i},'POST');assert.equal(r.status,200);bookIds.push(r.data.id);}
   assert.equal((await request('/api/admin/products/'+bookIds[0],{...product,title:'Edited audit book'},'PUT')).status,200);
+  const landing={...product,preview_pages:[{path:'/assets/uploads/test-page.png',caption:'A sample page <one>'}],testimonials:[{name:'Test reader',quote:'A useful read. <script>text only</script>'}]};
+  assert.equal((await request('/api/admin/products/'+bookIds[0],landing,'PUT')).status,200);
+  const publicBooks=(await request('/api/store/products',null,'GET','guest')).data.products;
+  const saved=publicBooks.find(p=>p.id===bookIds[0]);
+  const json=value=>typeof value==='string'?JSON.parse(value):value;
+  assert.deepEqual(json(saved.preview_pages),landing.preview_pages);
+  assert.deepEqual(json(saved.testimonials),landing.testimonials);
+  assert.equal(saved.pdf_path,undefined);
+  assert.equal((await request('/api/admin/products',{...landing,preview_pages:[{path:uploaded.path}]},'POST')).status,400);
+  assert.equal((await request('/api/admin/products',{...landing,preview_pages:[{path:'javascript:alert(1)'}]},'POST')).status,400);
+  assert.equal((await request('/api/admin/products',{...landing,testimonials:[{name:'',quote:'Missing name'}]},'POST')).status,400);
+  assert.equal((await request('/api/admin/products',{...landing,testimonials:Array(11).fill({name:'Reader',quote:'Quote'})},'POST')).status,400);
+  assert.equal((await request('/api/admin/products/'+bookIds[1],{...product,status:'draft'},'PUT')).status,200);
+  assert.ok(!(await request('/api/store/products')).data.products.some(p=>p.id===bookIds[1]));
+  assert.equal((await request('/api/admin/products/'+bookIds[1],product,'PUT')).status,200);
+  assert.equal((await request('/api/admin/products/'+bookIds[0],{...product,preview_pages:[],testimonials:[]},'PUT')).status,200);
+  const cleared=(await request('/api/store/products')).data.products.find(p=>p.id===bookIds[0]);
+  assert.deepEqual(json(cleared.preview_pages),[]);assert.deepEqual(json(cleared.testimonials),[]);
   const coupon=await request('/api/admin/coupons',{code:'AUDIT-'+key.slice(0,8),type:'flat',value:1.25,minimum:0,limit:2,status:'active'},'POST');assert.equal(coupon.status,200);couponIds.push(coupon.data.id);
   const coupons=await request('/api/admin/coupons');assert.equal(coupons.data.coupons.find(c=>c.id===coupon.data.id).discount_value,125);
   assert.equal((await request('/api/admin/coupons/'+coupon.data.id,{code:'AUDIT-'+key.slice(0,8),type:'flat',value:1.25,ebook_id:bookIds[0],status:'active'},'PUT')).status,200);
@@ -56,7 +76,7 @@ let server;
   assert.equal((await request('/api/admin/me',null,'GET','customer')).status,200);
   assert.equal((await request('/api/admin/team',null,'GET','customer')).status,403);
   assert.equal((await request('/api/admin/team/'+encodeURIComponent(member),null,'DELETE')).status,200);
-  assert.equal((await request('/api/admin/me',null,'GET','customer')).status,403);
+  assert.equal((await request('/api/admin/me',null,'GET','customer')).status,401);
   assert.equal((await request('/api/admin/products/'+bookIds[0],null,'DELETE')).status,200);
   console.log('PASS: database-verified admin access, forged-role rejection, CSRF, product/category/coupon CRUD, PDF upload validation, multi-book checkout, refund access revocation, resend, settings validation, all admin reads, admin grant/revoke.');
  }finally{

@@ -6,6 +6,8 @@ const { sendOtpEmail } = require('../email');
 const { normalizeEmail, isValidEmail, createOtp, regenerateSession, destroySession } = require('../auth');
 
 const router = express.Router();
+router.use(require('./password'));
+router.use(require('../rate-limit').limit('auth',100,900));
 const OTP_TTL_MINUTES = 10;
 const OTP_COOLDOWN_SECONDS = 60;
 const OTP_HOURLY_LIMIT = 5;
@@ -32,8 +34,9 @@ router.post('/send-otp', async (request, response, next) => {
       'insert into users (email) values (?) on duplicate key update email = values(email)',
       [email]
     );
-    const [users] = await connection.execute('select id from users where email = ? limit 1', [email]);
+    const [users] = await connection.execute('select id,session_version,is_active from users where email = ? limit 1', [email]);
     const userId = users[0].id;
+    if(!users[0].is_active){await connection.rollback();return response.status(403).json({error:'Sign-in is unavailable for this account.'});}
 
     const [recent] = await connection.execute(
       'select created_at from otp_codes where user_id = ? order by created_at desc limit 1',
@@ -55,7 +58,7 @@ router.post('/send-otp', async (request, response, next) => {
 
     const otp = createOtp();
     const otpHash = await bcrypt.hash(otp, 10);
-    await connection.execute('update otp_codes set consumed_at = now() where user_id = ? and consumed_at is null', [userId]);
+    await connection.execute("update otp_codes set consumed_at = now() where user_id = ? and purpose = 'SIGN_IN' and consumed_at is null", [userId]);
     const [insert] = await connection.execute(
       'insert into otp_codes (user_id, otp_hash, expires_at) values (?, ?, date_add(now(), interval ? minute))',
       [userId, otpHash, OTP_TTL_MINUTES]
@@ -67,7 +70,7 @@ router.post('/send-otp', async (request, response, next) => {
       await sendOtpEmail(email, otp);
     } catch (emailError) {
       await pool.execute('delete from otp_codes where id = ?', [otpId]);
-      console.error('OTP email delivery failed:', emailError.message);
+      console.error('OTP email delivery failed.');
       return response.status(502).json({ error: 'The verification email could not be sent. Please try again later.' });
     }
 
@@ -95,9 +98,9 @@ router.post('/verify-otp', async (request, response, next) => {
 
   try {
     const [rows] = await pool.execute(
-      `select o.id, o.otp_hash, o.expires_at, o.attempts, u.id as user_id
+      `select o.id, o.otp_hash, o.expires_at, o.attempts, u.id as user_id, u.session_version
        from otp_codes o join users u on u.id = o.user_id
-       where u.email = ? and o.consumed_at is null
+       where u.email = ? and u.is_active=1 and o.purpose='SIGN_IN' and o.consumed_at is null
        order by o.created_at desc limit 1`,
       [email]
     );
@@ -112,9 +115,11 @@ router.post('/verify-otp', async (request, response, next) => {
       return response.status(400).json({ error: 'This code has expired. Request a new one.' });
     }
 
+    const [attempt] = await pool.execute('update otp_codes set attempts=attempts+1 where id=? and attempts<5 and consumed_at is null and expires_at>now()',[record.id]);
+    if(!attempt.affectedRows)return response.status(400).json({error:'Request a new verification code.'});
     const matches = await bcrypt.compare(otp, record.otp_hash);
     if (!matches) {
-      await pool.execute('update otp_codes set attempts = attempts + 1 where id = ?', [record.id]);
+
       return response.status(400).json({ error: 'The verification code is incorrect.' });
     }
 
@@ -122,7 +127,7 @@ router.post('/verify-otp', async (request, response, next) => {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
-      const [consumed] = await connection.execute('update otp_codes set consumed_at = now() where id = ? and consumed_at is null and expires_at > now() and attempts < ?', [record.id, MAX_VERIFY_ATTEMPTS]);
+      const [consumed] = await connection.execute('update otp_codes set consumed_at = now() where id = ? and consumed_at is null and expires_at > now() and attempts <= ?', [record.id, MAX_VERIFY_ATTEMPTS]);
       if (!consumed.affectedRows) {
         await connection.rollback();
         return response.status(400).json({error:'This verification code has expired or was already used. Request a new code.'});
@@ -146,7 +151,7 @@ router.post('/verify-otp', async (request, response, next) => {
     await regenerateSession(request);
     request.session.userId = record.user_id;
     request.session.email = email;
-    request.session.isAdmin = email === String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    request.session.sessionVersion = record.session_version;
     response.json({ ok: true, redirect: '/library/' });
   } catch (error) {
     next(error);
@@ -178,12 +183,14 @@ router.post('/google', async (request, response, next) => {
     const fullName = String(payload && payload.name || email.split('@')[0]).trim().slice(0, 120);
     if (!payload || !payload.email_verified || !isValidEmail(email)) return response.status(401).json({ error: 'Google did not provide a verified email address.' });
     const connection = await pool.getConnection();
-    let userId;
+    let userId, sessionVersion;
     try {
       await connection.beginTransaction();
       await connection.execute('insert into users (email, is_verified) values (?, true) on duplicate key update is_verified = true', [email]);
-      const [users] = await connection.execute('select id from users where email = ? limit 1', [email]);
+      const [users] = await connection.execute('select id,session_version,is_active from users where email = ? limit 1', [email]);
       userId = users[0].id;
+      sessionVersion = users[0].session_version;
+      if(!users[0].is_active){await connection.rollback();return response.status(403).json({error:'Sign-in is unavailable for this account.'});}
       await connection.execute(`insert into profiles (user_id, full_name, mobile) values (?, ?, '') on duplicate key update user_id = values(user_id)`, [userId, fullName]);
       await connection.commit();
     } catch (error) {
@@ -195,7 +202,7 @@ router.post('/google', async (request, response, next) => {
     await regenerateSession(request);
     request.session.userId = userId;
     request.session.email = email;
-    request.session.isAdmin = email === String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    request.session.sessionVersion = sessionVersion;
     response.json({ ok: true, redirect: '/library/' });
   } catch (error) {
     if (/token|audience|recipient/i.test(error.message)) return response.status(401).json({ error: 'Google sign-in could not be verified. Please try again.' });
@@ -206,8 +213,9 @@ router.post('/google', async (request, response, next) => {
 router.get('/session', async (request, response, next) => {
   response.setHeader('Cache-Control', 'no-store');
   try {
-    const access = await require('../middleware').adminAccess(request.session && request.session.userId);
-    response.json({ authenticated: Boolean(request.session && request.session.userId), isAdmin:access.isAdmin, email: request.session && request.session.email || null });
+    const user = await require('../middleware').sessionUser(request);
+    const access = await require('../middleware').adminAccess(user && user.id);
+    response.json({ authenticated: Boolean(user), isAdmin:access.isAdmin, email: user ? user.email : null });
   } catch(error) { next(error); }
 });
 

@@ -31,6 +31,7 @@ app.use((request, response, next) => {
   next();
 });
 app.use(cors({ origin: process.env.APP_ORIGIN || `http://localhost:${port}`, credentials: true }));
+app.use('/api/admin/products', express.json({ limit: '128kb' }));
 app.use(express.json({ limit: '20kb' }));
 app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 app.use((request, response, next) => {
@@ -69,6 +70,8 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/store', storeRoutes);
 app.use('/api/test-checkout', require('./routes/test-checkout'));
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/analytics', require('./routes/analytics'));
+app.get('/api/payments/config',(req,res)=>res.json({live_enabled:false,test_enabled:require('./purchase-access').testEnabled()}));
 
 app.get(['/library', '/library/'], (request, response) => {
   if (!request.session.userId) return response.redirect('/signin/?next=/library/');
@@ -90,14 +93,25 @@ app.use('/admin', (request, response) => {
 
 // Serve only explicit public directories; never expose the workspace root.
 for (const directory of ['css','js','fonts','images','uploads']) {
+  if(directory==='uploads')app.use('/assets/uploads',async(request,response,next)=>{
+    try{
+      let pathname;try{pathname=decodeURIComponent(request.path);}catch{return response.status(400).json({error:'Invalid sample URL.'});}
+      if(!pathname.toLowerCase().endsWith('.pdf'))return next();
+      const sample='/assets/uploads/'+path.basename(pathname);
+      const [[book]]=await pool.execute("select id from ebooks where sample_path=? and status='published' limit 1",[sample]);
+      if(!book||!await require('./sample-files').safeSample(sample))return response.status(404).json({error:'Sample not available.'});
+      next();
+    }catch(error){next(error);}
+  });
   const files = express.static(path.join(root, 'assets', directory), {dotfiles:'deny'});
   app.use('/assets/'+directory, files);
   // Preserve older URLs used by saved book records and existing links.
   if (directory !== 'uploads') app.use('/'+directory, files);
 }
-for (const directory of ['about','cart','categories','checkout','confirm-signup','contact','privacy','product','signin','terms','thank-you']) {
+for (const directory of ['about','cart','categories','checkout','confirm-signup','contact','forgot-password','privacy','product','signin','terms','thank-you']) {
   app.use('/'+directory, express.static(path.join(root,'pages',directory), {extensions:['html'],index:'index.html',dotfiles:'deny'}));
 }
+app.get(['/ebooks/fitness-for-busy-professionals','/ebooks/fitness-for-busy-professionals/','/ebooks/fitness-for-busy-professionals/index.html'], (request,response) => response.redirect('/product/?slug=fitness-for-busy-professionals'));
 for (const directory of ['ebooks','library']) {
   app.use('/'+directory, express.static(path.join(root,directory), {extensions:['html'],index:'index.html',dotfiles:'deny'}));
 }
@@ -105,7 +119,7 @@ app.get(['/', '/index.html'], (request,response) => response.sendFile(path.join(
 
 app.use('/api', (request, response) => response.status(404).json({ error: 'API endpoint not found.' }));
 app.use((error, request, response, next) => {
-  console.error(error);
+  console.error('Request failed:', error.code || error.type || 'internal_error');
   if (response.headersSent) return next(error);
   if (error.type === 'entity.too.large') return response.status(413).json({error:'This upload or request is too large.'});
   response.status(500).json({ error: 'An unexpected server error occurred.' });

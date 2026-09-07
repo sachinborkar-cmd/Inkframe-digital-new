@@ -145,13 +145,13 @@ OTP rules:
 - `POST /api/store/orders` (authenticated; creates pending orders)
 - `/api/admin/*` product, category, coupon, settings, order, customer, and dashboard APIs (administrator only)
 
-The email configured as `ADMIN_EMAIL` becomes the owner after signing in with OTP or Google. There is no SMTP-account fallback. Without a configured owner, no account automatically receives owner access. Admin and customer changes are stored in MySQL. The legacy `/api/store/orders` endpoint creates pending orders.
+Admin authorization now uses database roles. A one-time migration preserves existing verified administrators; later registrations never gain a role from an email address. The legacy `/api/store/orders` endpoint is disabled until live payments are configured. See [security implementation](../SECURITY-IMPLEMENTATION.md).
 
 ## Admin login and management
 
-Open `http://localhost:8000/admin/` in your browser. Sign in with the email in `ADMIN_EMAIL` in your live `.env`, using a six-digit email OTP or Google. There is no separate admin password. Restart the server after changing `.env`. The frontend provides the panel; Express checks the verified database account for every admin page and API request. A customer session, a forged session admin flag, or an unverified email does not grant access. Mutations require a session CSRF token, and requests from another browser origin are rejected.
+Open `http://localhost:8000/admin/` in your browser. Sign in to a database-provisioned administrator account using email OTP, Google, or a previously set password. On a fresh installation, explicitly provision an existing verified account with `node server/provision-owner.js VERIFIED_USER_ID`. Restart the server after changing `.env`. The frontend provides the panel; Express checks the verified database account for every admin page and API request. A customer session, a forged session admin flag, or an unverified email does not grant access. Mutations require a session CSRF token, and requests from another browser origin are rejected.
 
-The owner can grant access to other email addresses in **Admin access**, send an invitation, or revoke access immediately. Additional administrators can manage store data but cannot manage administrator access. Normal customers do not see an Admin navigation link.
+The owner can grant access to existing verified customer accounts in **Admin access**, send an invitation, or revoke access immediately. Additional administrators can manage store data but cannot manage administrator access. Normal customers do not see an Admin navigation link.
 
 - **Products:** add/edit, assign categories, upload covers, private PDFs and public sample PDFs, publish/draft/archive, search and bulk archive. Published products automatically appear in the storefront and have a `/product/?slug=...` detail page. Slugs remain stable after creation. Paid files accept PDFs up to 20 MB and are served only after a purchase check.
 - **Categories:** add/edit names, descriptions, display order, status and banner images.

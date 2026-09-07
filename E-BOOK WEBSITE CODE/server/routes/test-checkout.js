@@ -1,10 +1,11 @@
-﻿const express=require('express');
+const express=require('express');
 const fs=require('node:fs/promises');
 const pool=require('../database');
 const {requireAuth}=require('../middleware');
 const {sendBookEmail}=require('../email');
 const {paidFile}=require('../book-files');
 const router=express.Router();router.use(requireAuth);
+router.use((req,res,next)=>require('../purchase-access').testEnabled()?next():res.status(403).json({error:'Test payments are disabled.'}));
 async function receipt(id,userId){const [[order]]=await pool.execute(`select o.id,o.amount_paise,o.status,o.delivery_email,o.email_sent_at,o.checkout_group,e.title,e.slug,e.pdf_path from orders o join ebooks e on e.id=o.ebook_id where o.id=? and o.user_id=? and o.payment_method='test'`,[id,userId]);return order;}
 async function deliver(o){if(o.status!=='paid')return;const [claim]=await pool.execute('update orders set email_attempt_at=now() where id=? and email_sent_at is null and (email_attempt_at is null or email_attempt_at<date_sub(now(),interval 2 minute))',[o.id]);if(!claim.affectedRows)return;try{await sendBookEmail(o.delivery_email,o.id,o.amount_paise,paidFile(o.pdf_path),o.title,true);await pool.execute('update orders set email_sent_at=now() where id=?',[o.id]);}catch(error){console.error('Book email delivery failed:',error.code||error.message);}}
 async function result(id,userId){const order=await receipt(id,userId);if(!order)return null;const [ids]=order.checkout_group?await pool.execute('select id from orders where checkout_group=? and user_id=? order by id',[order.checkout_group,userId]):[[{id:order.id}]];const orders=await Promise.all(ids.map(r=>receipt(r.id,userId)));return {order:publicOrder(order),orders:orders.map(publicOrder)};}

@@ -2,12 +2,13 @@ const express = require('express');
 const pool = require('../database');
 const { requireAuth } = require('../middleware');
 
+const {paidCondition}=require('../purchase-access');
 const router = express.Router();
 router.use(requireAuth);
 
 router.get('/:slug/download', async (request, response, next) => {
   try {
-    const [[order]] = await pool.execute("select o.id,e.pdf_path,e.title from orders o join ebooks e on e.id=o.ebook_id where o.user_id=? and o.status='paid' and e.slug=? order by o.id desc limit 1", [request.session.userId, request.params.slug]);
+    const [[order]] = await pool.execute(`select o.id,e.pdf_path,e.title from orders o join ebooks e on e.id=o.ebook_id where o.user_id=? and ${paidCondition()} and e.slug=? order by o.id desc limit 1`, [request.session.userId, request.params.slug]);
     if (!order) return response.status(403).json({error:'Purchase this book to download it.'});
     response.setHeader('Cache-Control', 'private, no-store');
     response.download(require('../book-files').paidFile(order.pdf_path), order.title.replace(/[^a-zA-Z0-9 -]/g,'').slice(0,100)+'.pdf', async error => {
@@ -22,7 +23,7 @@ router.get('/', async (request, response, next) => {
     const [books] = await pool.execute(
       `select e.slug, e.title, e.author, e.pdf_path, e.epub_path, o.created_at as purchased_at
        from orders o join ebooks e on e.id = o.ebook_id
-       where o.user_id = ? and o.status = 'paid' order by o.created_at desc`,
+       where o.user_id = ? and ${paidCondition()} order by o.created_at desc`,
       [request.session.userId]
     );
     const [orders] = await pool.execute(

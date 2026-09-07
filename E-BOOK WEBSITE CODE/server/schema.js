@@ -26,8 +26,12 @@ async function ensureSchema() {
   if (!await columnExists('ebooks', 'cover_path')) await pool.query('alter table ebooks add column cover_path varchar(500) null');
   if (!await columnExists('ebooks', 'category_id')) await pool.query('alter table ebooks add column category_id bigint unsigned null');
   if (!await columnExists('ebooks', 'sample_path')) await pool.query('alter table ebooks add column sample_path varchar(500) null');
+  for (const column of ['preview_pages', 'testimonials']) {
+    if (!await columnExists('ebooks', column)) await pool.query(`alter table ebooks add column ${column} json null`);
+  }
   if (!await columnExists('orders', 'download_count')) await pool.query('alter table orders add column download_count int unsigned not null default 0');
   await pool.query(`create table if not exists admin_members (email varchar(254) not null primary key, created_at timestamp not null default current_timestamp) engine=InnoDB`);
+  await require('./security-schema')();
   await pool.query(`create table if not exists categories (
     id bigint unsigned not null auto_increment, name varchar(120) not null, slug varchar(140) not null,
     description text null, status enum('draft','active') not null default 'active', sort_order int not null default 0,

@@ -198,5 +198,18 @@ window.InkframeCatalogue.then(function(data){
     var cover=document.getElementById('product-cover');if(p.cover_path){cover.src=p.cover_path;cover.alt=p.title;}else cover.hidden=true;
     document.getElementById('product-buy').dataset.product=p.slug;document.getElementById('product-cart').dataset.product=p.slug;
     if(p.sample_path){var sample=document.getElementById('product-sample');sample.href=p.sample_path;sample.hidden=false;}
+    var list=function(value){return typeof value==='string'?JSON.parse(value):value||[];};
+    var previews=list(p.preview_pages),testimonials=list(p.testimonials);
+    document.querySelector('meta[name="description"]').content=(p.description||p.title).slice(0,160);
+    document.getElementById('product-category').textContent=p.category_name?' / '+p.category_name:'';
+    document.getElementById('product-cover-placeholder').hidden=Boolean(p.cover_path);
+    document.getElementById('product-description').textContent=p.description||'More information about this ebook will be available soon.';
+    document.getElementById('product-buy').href='/checkout/?product='+encodeURIComponent(p.slug);
+    document.getElementById('preview-pages').hidden=!(previews.length||p.sample_path);
+    document.getElementById('preview-jump').hidden=!(previews.length||p.sample_path);
+    document.getElementById('product-previews').innerHTML=previews.map(function(page,i){return '<figure><a href="'+escape(page.path)+'" target="_blank" rel="noopener" aria-label="Open preview page '+(i+1)+' in a new tab"><img loading="lazy" src="'+escape(page.path)+'" alt="'+escape(page.caption||'Preview page '+(i+1))+'"></a><figcaption>'+escape(page.caption||'Page '+(i+1))+'</figcaption></figure>';}).join('');
+    document.getElementById('reader-testimonials').hidden=!testimonials.length;
+    document.getElementById('testimonial-jump').hidden=!testimonials.length;
+    document.getElementById('product-testimonials').innerHTML=testimonials.map(function(t){return '<blockquote><p>'+escape(t.quote)+'</p><cite>'+escape(t.name)+'</cite></blockquote>';}).join('');
   }
 }).catch(function(){var status=document.getElementById('product-status');if(status)status.textContent='Could not load the ebook. Please reload.';});

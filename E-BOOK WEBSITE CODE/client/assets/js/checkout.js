@@ -30,7 +30,10 @@
     document.getElementById('ln').value = names.join(' ');
     document.getElementById('em').value = body.profile.email;
     document.getElementById('ph').value = body.profile.mobile || '';
-    await window.InkframeCatalogue; ready = true; render();
+    await window.InkframeCatalogue;
+    var configResponse=await fetch('/api/payments/config'),config=await configResponse.json();
+    if(!configResponse.ok||!config.test_enabled)throw Error('Checkout is unavailable until secure live payments are configured.');
+    ready = true; render();
   }).catch(function(error) { message.textContent = error.message + ' Please reload to try again.'; });
   document.getElementById('checkout-form').addEventListener('submit', async function(event) {
     event.preventDefault();
