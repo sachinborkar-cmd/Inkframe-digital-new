@@ -20,6 +20,38 @@ const send=(p,b,method='POST')=>api(p,{method,body:JSON.stringify(b)});
 function heading(title,actions=''){return '<div class="admin-toolbar page-heading"><div><h1>'+escape(title)+'</h1><p class="page-description">'+escape(descriptions[view]||'Manage your store.')+'</p></div><div class="admin-actions">'+actions+'</div></div>';}
 function button(label,action,id='',extra=''){return '<button type="button" class="btn '+(action==='add'?'btn-primary':'btn-ghost')+(['refund','revoke','archive'].includes(action)?' btn-danger':'')+'" data-action="'+action+'" data-id="'+escape(id)+'" '+extra+'>'+escape(label)+'</button>';}
 function table(headers,rows){return '<div class="card table-wrap mt-6" tabindex="0" role="region" aria-label="'+escape(view||'Records')+' table"><table class="data-table"><thead><tr>'+headers.map(h=>'<th scope="col">'+escape(h)+'</th>').join('')+'</tr></thead><tbody>'+ (rows.length?rows.map(r=>'<tr>'+r.map((c,i)=>'<td data-label="'+escape(headers[i])+'"><div class="cell-content">'+c+'</div></td>').join('')+'</tr>').join(''):'<tr><td class="table-empty" colspan="'+headers.length+'"><strong>No records to show</strong>New records will appear here. Try adjusting your filters.</td></tr>')+'</tbody></table></div>';}
+function activitySummary(record){
+ let details=record.details;
+ if(typeof details==='string'){try{details=JSON.parse(details);}catch{details={};}}
+ if(!details||typeof details!=='object'||Array.isArray(details))details={};
+ const value=key=>['string','number'].includes(typeof details[key])?String(details[key]).trim():'';
+ const item=(label,key)=>value(key)?label+' "'+value(key)+'"':value('id')?label+' #'+value('id'):label.toLowerCase();
+ const order=value('order')?'order #'+value('order'):'an order';
+ const customer=value('id')?'customer #'+value('id'):'a customer';
+ const email=value('email')||'an admin';
+ switch(record.action){
+  case 'Product saved':return 'Saved '+item('Book','title')+({published:' with published status',draft:' as a draft',archived:' with archived status'}[value('status')]||'')+'.';
+  case 'Product archived':return 'Archived '+item('Book','title')+'.';
+  case 'Category saved':return 'Saved '+item('Category','name')+'.';
+  case 'Coupon saved':return 'Saved '+item('Coupon','code')+'.';
+  case 'File uploaded':{
+   const extension=value('name').split('.').pop().toLowerCase();
+   if(value('kind')==='paid')return 'Uploaded a book file for paying customers.';
+   if(['jpg','jpeg','png','gif','webp','avif','svg'].includes(extension))return 'Uploaded an image for the store.';
+   if(extension==='pdf')return 'Uploaded a public PDF file.';
+   return 'Uploaded a file for the store.';
+  }
+  case 'Download email resent':return 'Resent the download email for '+order+'.';
+  case 'Test order refunded':return 'Marked test '+order+' as refunded.';
+  case 'Store settings updated':return 'Updated the store settings.';
+  case 'Admin access granted':return 'Granted admin access to '+email+'.';
+  case 'Admin access revoked':return 'Removed admin access for '+email+'.';
+  case 'Admin invitation sent':return 'Sent an admin invitation to '+email+'.';
+  case 'Customer access restored':return 'Restored account access for '+customer+'.';
+  case 'Customer access suspended':return 'Suspended account access for '+customer+'.';
+  default:return 'Recorded an admin action.';
+ }
+}
 function badge(value){const green=['paid','published','active','verified'],amber=['pending','draft','unverified'];return '<span class="status-badge status-'+(green.includes(value)?'green':amber.includes(value)?'amber':value==='refunded'?'red':'gray')+'">'+escape(value)+'</span>';}
 function person(name,email){return '<div class="customer-cell"><span class="customer-avatar" aria-hidden="true">'+escape((name||email||'?').slice(0,2).toUpperCase())+'</span><div><span class="cell-primary">'+escape(name||'Customer')+'</span><span class="cell-secondary">'+escape(email)+'</span></div></div>';}
 function input(name,label,value='',type='text',extra=''){return '<label>'+escape(label)+'<input class="field mt-2" name="'+name+'" type="'+type+'" value="'+escape(value)+'" '+extra+'></label>';}
@@ -59,7 +91,7 @@ async function load(){const version=++generation;view=location.hash.slice(1)||'d
   }else if(view==='team'){
    const d=await api('/team');data=d.members;html=heading('Admin access')+'<p class="muted mt-5">Owner: '+escape(d.owner)+'. Only the owner can grant or revoke access. Grant access only to existing verified customer accounts.</p><div class="card p-6 mt-6">'+form('team','',input('email','New administrator email','','email','required'))+'</div>'+table(['Administrator','Access granted','Actions'],d.members.map(r=>[escape(r.email),escape(date(r.created_at)),button('Send invitation','invite',r.email)+button('Revoke access','revoke',r.email)]));
   }else if(view==='activity'){
-   const d=await api('/activity');html=heading('Activity log')+'<p class="muted mt-4">Most recent 200 admin actions.</p>'+table(['When','Who','Action','Details'],d.activity.map(r=>[escape(date(r.created_at)),escape(r.email||'System'),escape(r.action),escape(r.details)]));
+   const d=await api('/activity');html=heading('Activity log')+'<p class="muted mt-4">The latest 200 admin actions: who made each change and when.</p>'+table(['When','Admin','What changed'],d.activity.map(r=>[escape(date(r.created_at)),escape(r.email||'System'),escape(activitySummary(r))]));
   }else{location.hash='#dashboard';return;}
   if(version!==generation)return;$('#admin-content').innerHTML=html;$('#admin-content').setAttribute('aria-busy','false');$('#admin-breadcrumb').textContent=({dashboard:'Overview',settings:'Payments & settings',team:'Admin access',activity:'Activity log'}[view]||view.charAt(0).toUpperCase()+view.slice(1));document.title=$('#admin-breadcrumb').textContent+' | Inkframe Admin';document.querySelectorAll('.admin-nav a').forEach(a=>{a.classList.toggle('is-active',a.hash==='#'+view);if(a.hash==='#'+view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});if($('#list'))renderList();message('');
  }catch(e){if(version!==generation)return;message(e.message,'error');$('#admin-content').innerHTML=button('Try again','reload');$('#admin-content').setAttribute('aria-busy','false');}

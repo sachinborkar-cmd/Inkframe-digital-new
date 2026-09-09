@@ -175,3 +175,11 @@ img{max-width:100%;display:block}
 @media(max-width:820px){.admin-sidebar{position:static;width:auto}.admin-sidebar .admin-nav{display:none}.admin-sidebar.open .admin-nav{display:grid}.admin-main{margin-left:0;padding:1rem}.admin-mobile-toggle{display:inline-flex}.data-table{min-width:620px}}
 
 [hidden]{display:none!important}
+
+/* Explicit exits for customer account and purchase flows. */
+.flow-card{position:relative;padding-top:64px!important}
+.flow-close{position:absolute;top:14px;right:14px;z-index:5;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid #e7e8e5;border-radius:50%;background:#fff;color:#34452d;font:28px/1 "Sora",sans-serif;box-shadow:0 2px 8px #00000008}
+.flow-close:hover{background:#f1f4ee}
+.flow-close:focus-visible,.flow-back:focus-visible{outline:3px solid #93a77d;outline-offset:3px}
+.flow-back{display:inline-flex;align-items:center;min-height:40px;margin:8px 0 16px;font:500 13px/1.5 "Sora",sans-serif;color:#34452d;gap:8px}
+.flow-back:hover{text-decoration:underline}

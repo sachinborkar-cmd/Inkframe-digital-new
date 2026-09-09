@@ -1,75 +1,66 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <base href="/">
-  <title>Sign in — Inkframe Press</title>
-  <meta name="description" content="Sign in to your Inkframe Press customer account.">
+  <title>Create your account — Inkframe Press</title>
+  <meta name="description" content="Join Inkframe Press to discover ebooks and keep your purchases in your personal library.">
   <link rel="stylesheet" href="/assets/css/theme.css">
-  <script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script>
+  <link rel="stylesheet" href="/assets/css/account.css">
 </head>
-<body>
-  <header class="site-header"></header>
-
-  <main class="shell py-10 md:py-16">
-    <section class="card p-7 md:p-10 max-w-xl mx-auto">
-      <div class="text-center">
-        <p class="eyebrow">Your account</p>
-        <h1 class="page-title mt-3 text-3xl md:text-4xl font-bold">Customer sign in</h1>
-        <p class="mt-4 muted">Enter your name and email to receive a secure six-digit sign-in code.</p>
+<body class="account-page">
+  <main class="account-shell">
+    <a class="flow-close" href="/" aria-label="Close sign in and return to the store" title="Back to store"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></a>
+    <aside class="account-story" aria-label="Welcome to Inkframe Press">
+      <img class="account-photo" src="/assets/images/account-reading.png" alt="A reader enjoying an ebook on her tablet in a cozy cafe" width="1024" height="1536" fetchpriority="high">
+      <a class="account-brand" href="/" aria-label="Inkframe Press home"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v16M12 5C9 3 5 3 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-3-1-7-1-10 1Z"/></svg>Inkframe Press</a>
+      <div class="account-story-copy">
+        <p class="account-kicker">A little reading. A world of possibility.</p>
+        <h2>Your next chapter<br>starts here.</h2>
+        <p>Discover fresh ideas, find your next read, and make a little space for yourself.</p>
+        <span class="account-story-note">Good books. Always within reach.</span>
       </div>
-
-      <div class="mt-8">
-        <div id="google-signin-button" class="flex justify-center"><button type="button" class="btn btn-ghost w-full max-w-xs" disabled><strong aria-hidden="true">G</strong> Sign in with Google</button></div>
-        <p id="google-signin-message" class="text-sm text-center muted mt-3" aria-live="polite"></p>
-        <div class="flex items-center gap-4 my-7"><span class="flex-1 border-t" style="border-color:var(--line)"></span><span class="text-xs muted font-ui">OR USE EMAIL OTP</span><span class="flex-1 border-t" style="border-color:var(--line)"></span></div>
-      </div>
-
-      <details class="mt-6"><summary class="nav-link">Sign in with a password</summary><form id="password-login" class="mt-5 space-y-4"><label class="block">Email<input class="field mt-2" name="email" type="email" autocomplete="username" required></label><label class="block">Password<input class="field mt-2" name="password" type="password" autocomplete="current-password" required></label><button class="btn btn-primary" type="submit">Sign in</button></form></details><p id="password-message" class="mt-3" role="status"></p><a class="nav-link inline-block mt-4" href="/forgot-password/">Forgot password / set a password</a>
-      <form id="customer-signin-form" class="mt-8 space-y-5">
-        <div>
-          <label class="label" for="customer-name">Full name</label>
-          <input class="field" id="customer-name" name="full_name" type="text" autocomplete="name" required minlength="2" maxlength="120" placeholder="Your full name">
-        </div>
-        <div>
-          <label class="label" for="customer-email">Email address</label>
-          <input class="field" id="customer-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-        </div>
-        <button type="submit" class="btn btn-primary btn-lg w-full">Send OTP</button>
-        <p id="customer-signin-error" class="text-sm text-center" style="color:var(--accent)" hidden></p>
-        <p class="text-xs muted text-center">By continuing, you agree to our <a class="accent" href="/terms/">Terms</a> and <a class="accent" href="/privacy/">Privacy Policy</a>.</p>
-      </form>
-
-      <form id="customer-otp-form" class="mt-8 space-y-5" hidden>
-        <div class="text-center">
-          <h2 class="text-2xl font-bold">Check your email</h2>
-          <p class="mt-3 muted">Enter the six-digit verification code sent to your email address.</p>
-        </div>
-        <div>
-          <label class="label" for="customer-otp">Verification code</label>
-          <input class="field" id="customer-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" maxlength="6" placeholder="123456">
-        </div>
-        <button type="submit" class="btn btn-primary btn-lg w-full">Verify and sign in</button>
-        <p id="customer-otp-error" class="text-sm text-center" style="color:var(--accent)" hidden></p>
-      </form>
-
-      <div id="customer-signin-success" hidden class="text-center py-8" role="status">
-        <h2 class="text-2xl font-bold">You’re signed in</h2>
-        <p class="mt-3 muted">Your customer profile has been saved securely.</p>
-        <a href="/library/" class="btn btn-primary mt-6">Open my library</a>
+    </aside>
+    <section class="account-panel" aria-labelledby="account-title">
+      <div class="account-form-wrap">
+        <header class="account-heading">
+          <h1 id="account-title">Create your account</h1>
+          <p>Join Inkframe Press and start your next chapter.</p>
+        </header>
+        <form id="customer-signin-form" class="account-form">
+          <label class="account-field" for="customer-name"><span>Full name</span><input id="customer-name" name="full_name" type="text" autocomplete="name" required minlength="2" maxlength="120" placeholder="Your full name"></label>
+          <label class="account-field" for="customer-email"><span>Email address</span><input id="customer-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+          <p class="account-hint">We’ll email you a six-digit code to verify your account.</p>
+          <button type="submit" class="account-submit">Continue with email</button>
+          <p id="customer-signin-error" class="account-error" role="alert" hidden></p>
+        </form>
+        <form id="customer-otp-form" class="account-form" hidden>
+          <div class="account-verify-heading"><h2>Check your email</h2><p>Enter the six-digit code we sent to your email address.</p></div>
+          <label class="account-field" for="customer-otp"><span>Verification code</span><input id="customer-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" maxlength="6" placeholder="123456"></label>
+          <button type="submit" class="account-submit">Verify and continue</button>
+          <button type="button" id="customer-otp-back" class="account-back">Back / change email</button>
+          <p id="customer-otp-error" class="account-error" role="alert" hidden></p>
+        </form>
+        <div class="account-divider"><span>OR</span></div>
+        <div id="google-signin-button" data-button-text="signup_with" class="account-google"><button type="button" disabled><svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M44 24.5c0-1.4-.1-2.8-.4-4.2H24v8h11.2c-.5 2.6-2 4.8-4.2 6.3v5.2h6.8C41.7 36.2 44 30.8 44 24.5Z"/><path fill="#34A853" d="M24 45c5.6 0 10.3-1.8 13.8-5.2L31 34.6c-1.9 1.3-4.3 2-7 2-5.4 0-10-3.7-11.7-8.6h-7v5.4C8.8 40.3 15.8 45 24 45Z"/><path fill="#FBBC05" d="M12.3 28a12.6 12.6 0 0 1 0-8v-5.4h-7a21 21 0 0 0 0 18.8Z"/><path fill="#EA4335" d="M24 11.4c3 0 5.7 1 7.8 3L37.7 8A20.4 20.4 0 0 0 24 3C15.8 3 8.8 7.7 5.3 14.6l7 5.4C14 15.1 18.6 11.4 24 11.4Z"/></svg>Sign up with Google</button></div>
+        <p id="google-signin-message" class="account-hint account-google-message" aria-live="polite"></p>
+        <details class="account-login" id="account-login">
+          <summary>Have an account? <span>Log in</span></summary>
+          <form id="password-login" class="account-form">
+            <label class="account-field"><span>Email address</span><input name="email" type="email" autocomplete="username" required placeholder="you@example.com"></label>
+            <label class="account-field"><span>Password</span><input name="password" type="password" autocomplete="current-password" required placeholder="Your password"></label>
+            <button class="account-submit" type="submit">Sign in</button>
+          </form>
+          <p id="password-message" class="account-error" role="status"></p>
+          <a class="account-reset" href="/forgot-password/">Forgot password / set a password</a>
+          <p class="account-hint">You can also use the email code option above to sign in.</p>
+        </details>
+        <p class="account-legal">By continuing, you agree to our <a href="/terms/">Terms</a> and <a href="/privacy/">Privacy Policy</a>.</p>
       </div>
     </section>
   </main>
-
-  <footer class="border-t" style="border-color:var(--line)">
-    <div class="shell py-10 text-sm muted font-ui flex flex-wrap gap-6 justify-between">
-      <p>© 2026 Inkframe Press.</p>
-      <nav class="flex gap-6"><a class="nav-link" href="/privacy/">Privacy</a><a class="nav-link" href="/terms/">Terms</a><a class="nav-link" href="/contact/">Contact</a></nav>
-    </div>
-  </footer>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="/assets/js/auth.js"></script><script src="/assets/js/password.js"></script>
-  <script src="/assets/js/site.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/password.js"></script>
 </body>
 </html>

@@ -13,11 +13,12 @@
   <header class="site-header"></header>
 
   <main class="shell py-10 md:py-16">
-    <section class="card p-7 md:p-10 max-w-xl mx-auto">
+    <section class="card p-7 md:p-10 max-w-xl mx-auto flow-card">
+      <a class="flow-close" href="/" aria-label="Close email verification and return to the store" title="Back to store"><span aria-hidden="true">&#215;</span></a>
       <div class="text-center">
         <p class="eyebrow">Email verification</p>
         <h1 class="page-title mt-3 text-3xl md:text-4xl font-bold">Enter your OTP</h1>
-        <p class="mt-4 muted">Enter your email address and the verification code Supabase sent to you.</p>
+        <p class="mt-4 muted">Enter your email address and the verification code we sent to you.</p>
       </div>
 
       <form id="confirm-signup-form" class="mt-8 space-y-5">
@@ -32,6 +33,7 @@
         <button type="submit" class="btn btn-primary btn-lg w-full">Verify OTP</button>
         <p id="confirm-signup-error" class="text-sm text-center" style="color:var(--accent)" hidden></p>
       </form>
+      <a class="flow-back" href="/signin/">&#8592; Back to sign in / request a new code</a>
 
       <div id="confirm-signup-success" hidden class="text-center py-8" role="status">
         <h2 class="text-2xl font-bold">Email verified</h2>

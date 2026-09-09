@@ -41,7 +41,7 @@
     try {
       var config = await api('/api/auth/google-config');
       if (!config.enabled) {
-        message.textContent = 'Google sign-in is temporarily unavailable. Please use email OTP below.';
+        message.textContent = 'Google sign-in is temporarily unavailable. Please continue with email.';
         return;
       }
       message.textContent = 'Loading Google sign-in...';
@@ -68,7 +68,7 @@
           }
         }
       });
-      google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', width: 320 });
+      google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill', text: container.dataset.buttonText || 'signin_with', width: Math.min(384, container.clientWidth || 320) });
       message.textContent = '';
     } catch (error) {
       message.textContent = error.message;
@@ -83,6 +83,18 @@
   if (signInForm && otpForm) {
     var signInError = document.getElementById('customer-signin-error');
     var otpError = document.getElementById('customer-otp-error');
+    var otpBack = document.getElementById('customer-otp-back');
+    if (otpBack) otpBack.addEventListener('click', function () {
+      if (otpForm.querySelector('button[type="submit"]').disabled) return;
+      otpForm.hidden = true;
+      signInForm.hidden = false;
+      otpForm.elements.otp.value = '';
+      showError(otpError, '');
+      showError(signInError, '');
+      sessionStorage.removeItem('inkframeOtpEmail');
+      sessionStorage.removeItem('inkframeCustomerName');
+      signInForm.elements.email.focus();
+    });
 
     signInForm.addEventListener('submit', async function (event) {
       event.preventDefault();

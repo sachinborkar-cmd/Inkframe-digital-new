@@ -9,5 +9,5 @@ bind(request,'forgot-password',f=>{email=f.elements.email.value.trim();return {e
 bind(verify,'verify-reset-otp',f=>({email,otp:f.elements.otp.value}),data=>{message.textContent=data.message;verify.hidden=true;finish.hidden=false;finish.elements.password.focus();});
 bind(finish,'reset-password',f=>{if(f.elements.password.value!==f.elements.confirmation.value)throw Error('Passwords do not match.');return {password:f.elements.password.value};},()=>{location.href='/signin/?password=reset';});
 const resend=document.getElementById('reset-resend');if(resend)resend.onclick=()=>{verify.hidden=true;request.hidden=false;message.textContent='Wait at least 60 seconds before requesting another code.';};
-if(login&&new URLSearchParams(location.search).get('password')==='reset')message.textContent='Password saved. Sign in with your new password.';
+if(login&&new URLSearchParams(location.search).get('password')==='reset'){message.textContent='Password saved. Sign in with your new password.';const panel=login.closest('details');if(panel)panel.open=true;}
 })();
