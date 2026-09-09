@@ -10,6 +10,7 @@ async function columnExists(table, column) {
 
 async function ensureSchema() {
   const orderColumns = {
+    order_number: "bigint unsigned null unique",
     payment_method: "varchar(20) null",
     checkout_key: "varchar(80) null unique",
     delivery_email: "varchar(254) null",
@@ -23,6 +24,13 @@ async function ensureSchema() {
   for (const [column, definition] of Object.entries(orderColumns)) {
     if (!await columnExists('orders', column)) await pool.query(`alter table orders add column ${column} ${definition}`);
   }
+  await pool.query(`create table if not exists order_sequence (
+    id tinyint unsigned not null primary key, next_number bigint unsigned not null
+  ) engine=InnoDB`);
+  await pool.query('insert ignore into order_sequence(id,next_number) values (1,1)');
+  const connection = await pool.getConnection();
+  try { await require('./order-numbering').backfillOrderNumbers(connection); }
+  finally { connection.release(); }
   if (!await columnExists('ebooks', 'status')) await pool.query("alter table ebooks add column status enum('draft','published','archived') not null default 'published'");
   if (!await columnExists('ebooks', 'description')) await pool.query('alter table ebooks add column description text null');
   if (!await columnExists('ebooks', 'cover_path')) await pool.query('alter table ebooks add column cover_path varchar(500) null');

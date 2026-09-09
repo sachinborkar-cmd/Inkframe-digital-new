@@ -1,11 +1,27 @@
 ﻿(function () {
   'use strict';
   var profile = document.getElementById('profile');
+  var profileTrigger;
   function openProfile() {
-    if (!profile) return;
-    profile.open = true;
-    profile.scrollIntoView({block:'start'});
+    if (!profile || profile.open) return;
+    profileTrigger = document.activeElement;
+    profile.showModal();
+    document.body.classList.add('profile-dialog-open');
+    document.getElementById('close-profile').focus();
   }
+  document.getElementById('open-profile').addEventListener('click', openProfile);
+  document.getElementById('close-profile').addEventListener('click', function () { profile.close(); });
+  profile.addEventListener('click', function (event) {
+    if (event.target !== profile) return;
+    var bounds = profile.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) profile.close();
+  });
+  profile.addEventListener('close', function () {
+    document.body.classList.remove('profile-dialog-open');
+    if (location.hash === '#profile') history.replaceState(null, '', location.pathname + location.search);
+    if (profileTrigger && profileTrigger !== document.body) profileTrigger.focus();
+    else document.getElementById('open-profile').focus();
+  });
   if (location.hash === '#profile') openProfile();
   window.addEventListener('hashchange', function () { if (location.hash === '#profile') openProfile(); });
   document.addEventListener('click', function (event) {
@@ -47,7 +63,7 @@
     body.appendChild(element('p', 'purchase-author', order.author ? 'By ' + order.author : 'Digital ebook'));
     var meta = element('dl', 'purchase-meta');
     var purchased = new Date(order.created_at);
-    detail(meta, 'Order', '#' + order.id);
+    detail(meta, 'Order', '#' + order.order_number);
     detail(meta, 'Purchased', Number.isNaN(purchased.getTime()) ? 'Date unavailable' : purchased.toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}));
     detail(meta, order.status === 'paid' || order.status === 'refunded' ? 'Amount paid' : 'Order total', 'INR ' + (Number(order.amount_paise || 0) / 100).toLocaleString('en-IN', {minimumFractionDigits:2,maximumFractionDigits:2}));
     body.appendChild(meta);

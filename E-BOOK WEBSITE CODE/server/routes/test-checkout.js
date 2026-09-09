@@ -1,12 +1,13 @@
 const express=require('express');
 const fs=require('node:fs/promises');
 const pool=require('../database');
+const {reserveOrderNumbers}=require('../order-numbering');
 const {requireAuth}=require('../middleware');
 const {deliverOrder}=require('../book-delivery');
 const {paidFile}=require('../book-files');
 const router=express.Router();router.use(requireAuth);
 router.use((req,res,next)=>require('../purchase-access').testEnabled()?next():res.status(403).json({error:'Test payments are disabled.'}));
-async function receipt(id,userId){const [[order]]=await pool.execute(`select o.id,o.amount_paise,o.status,o.delivery_email,o.email_sent_at,o.checkout_group,e.title,e.slug,e.pdf_path from orders o join ebooks e on e.id=o.ebook_id where o.id=? and o.user_id=? and o.payment_method='test'`,[id,userId]);return order;}
+async function receipt(id,userId){const [[order]]=await pool.execute(`select o.id,o.order_number,o.amount_paise,o.status,o.delivery_email,o.email_sent_at,o.checkout_group,e.title,e.slug,e.pdf_path from orders o join ebooks e on e.id=o.ebook_id where o.id=? and o.user_id=? and o.payment_method='test'`,[id,userId]);return order;}
 async function deliver(o){if(o)await deliverOrder(o.id);}
 async function result(id,userId){const order=await receipt(id,userId);if(!order)return null;const [ids]=order.checkout_group?await pool.execute('select id from orders where checkout_group=? and user_id=? order by id',[order.checkout_group,userId]):[[{id:order.id}]];const orders=await Promise.all(ids.map(r=>receipt(r.id,userId)));return {order:publicOrder(order),orders:orders.map(publicOrder)};}
 function publicOrder(o){const {pdf_path,checkout_group,...rest}=o;return rest;}
@@ -31,8 +32,9 @@ router.post('/',async(req,res,next)=>{
    for(const book of books)await fs.access(paidFile(book.pdf_path));
    const subtotal=books.reduce((sum,book)=>sum+book.price_paise,0);let discount=0,eligibleId=null,eligibleSubtotal=subtotal;
    if(b.coupon){const [[coupon]]=await c.execute("select * from coupons where code=? and status='active' and (expires_at is null or expires_at>now()) and (usage_limit is null or used_count<usage_limit) for update",[String(b.coupon).trim().toUpperCase()]);if(!coupon||subtotal<coupon.minimum_paise){await c.rollback();return res.status(400).json({error:'Coupon is no longer valid. Remove it or apply another code.'});}eligibleId=coupon.ebook_id;eligibleSubtotal=books.filter(book=>!eligibleId||book.id===eligibleId).reduce((sum,book)=>sum+book.price_paise,0);if(!eligibleSubtotal){await c.rollback();return res.status(400).json({error:'This coupon does not apply to the selected products.'});}discount=Math.min(eligibleSubtotal,coupon.discount_type==='percent'?Math.floor(eligibleSubtotal*coupon.discount_value/100):coupon.discount_value);await c.execute('update coupons set used_count=used_count+1 where id=?',[coupon.id]);}
+   const firstOrderNumber=await reserveOrderNumbers(c,books.length);
    let allocated=0,cumulative=0;
-   for(let i=0;i<books.length;i++){const book=books[i];cumulative+=(!eligibleId||book.id===eligibleId)?book.price_paise:0;const target=eligibleSubtotal?Math.floor(discount*cumulative/eligibleSubtotal):0,share=target-allocated;allocated=target;const [r]=await c.execute("insert into orders(user_id,ebook_id,amount_paise,status,payment_method,checkout_key,checkout_group,delivery_email,customer_details) values (?,?,?,'paid','test',?,?,?,?)",[req.session.userId,book.id,book.price_paise-share,i?key+'-'+i:key,key,user.email,JSON.stringify({full_name:name,phone,country:b.country})]);ids.push(r.insertId);await c.execute('delete from carts where user_id=? and ebook_id=?',[req.session.userId,book.id]);}
+   for(let i=0;i<books.length;i++){const book=books[i];cumulative+=(!eligibleId||book.id===eligibleId)?book.price_paise:0;const target=eligibleSubtotal?Math.floor(discount*cumulative/eligibleSubtotal):0,share=target-allocated;allocated=target;const [r]=await c.execute("insert into orders(order_number,user_id,ebook_id,amount_paise,status,payment_method,checkout_key,checkout_group,delivery_email,customer_details) values (?,?,?,?,'paid','test',?,?,?,?)",[firstOrderNumber+i,req.session.userId,book.id,book.price_paise-share,i?key+'-'+i:key,key,user.email,JSON.stringify({full_name:name,phone,country:b.country})]);ids.push(r.insertId);await c.execute('delete from carts where user_id=? and ebook_id=?',[req.session.userId,book.id]);}
    await c.execute('insert into profiles(user_id,full_name,mobile) values (?,?,?) on duplicate key update full_name=values(full_name),mobile=values(mobile)',[req.session.userId,name,phone]);
   }
   await c.commit();c.release();c=null;

@@ -4,7 +4,7 @@ const {paidFile} = require('./book-files');
 const {paidCondition} = require('./purchase-access');
 
 async function deliverOrder(id) {
-  const [[order]] = await pool.execute(`select o.id,o.delivery_email,o.amount_paise,o.payment_method,e.pdf_path,e.title
+  const [[order]] = await pool.execute(`select o.id,o.order_number,o.delivery_email,o.amount_paise,o.payment_method,e.pdf_path,e.title
     from orders o join ebooks e on e.id=o.ebook_id
     where o.id=? and ${paidCondition()} and o.email_sent_at is null`, [id]);
   if (!order) return false;
@@ -13,7 +13,7 @@ async function deliverOrder(id) {
     and (email_attempt_at is null or email_attempt_at<date_sub(now(),interval 2 minute))`, [id]);
   if (!claim.affectedRows) return false;
   try {
-    await sendBookEmail(order.delivery_email, order.id, order.amount_paise, paidFile(order.pdf_path), order.title, order.payment_method === 'test');
+    await sendBookEmail(order.delivery_email, order.order_number, order.amount_paise, paidFile(order.pdf_path), order.title, order.payment_method === 'test');
     await pool.execute('update orders set email_sent_at=now(),email_last_error=null where id=?', [id]);
     return true;
   } catch (error) {

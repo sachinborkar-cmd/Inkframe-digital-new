@@ -20,7 +20,7 @@ const slugify=s=>text(s,160).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^
 const paise=value=>Math.round(number(value)*100);
 function landingFields(b){
  const previews=b.preview_pages||[],testimonials=b.testimonials||[];
- if(!Array.isArray(previews)||previews.length>12)fail('Add up to 12 preview pages.');
+ if(!Array.isArray(previews)||previews.length>3)fail('Add up to 3 preview pages.');
  if(!Array.isArray(testimonials)||testimonials.length>10)fail('Add up to 10 testimonials.');
  return [JSON.stringify(previews.map(p=>{
   if(!p||typeof p!=='object')fail('Invalid preview page.');
@@ -45,7 +45,7 @@ router.get('/dashboard',wrap(async(req,res)=>{
   const [[products]]=await pool.query("select count(*) total from ebooks where status='published'");
   const [daily]=await pool.execute(`select date(created_at) day,count(*) orders,coalesce(sum(case when status='paid' and verified_at is not null and coalesce(payment_method,'')<>'test' then amount_paise else 0 end),0) sales_paise from orders where created_at>=date_sub(now(),interval ? day) group by date(created_at) order by day`,[days]);
   const [bestsellers]=await pool.execute(`select e.title,count(*) purchases from orders o join ebooks e on e.id=o.ebook_id where o.status='paid' and o.verified_at is not null and coalesce(o.payment_method,'')<>'test' and o.created_at>=date_sub(now(),interval ? day) group by e.id order by purchases desc limit 5`,[days]);
-  const [recent]=await pool.query('select o.id,o.status,o.amount_paise,o.created_at,e.title from orders o join ebooks e on e.id=o.ebook_id order by o.id desc limit 5');
+  const [recent]=await pool.query('select o.id,o.order_number,o.status,o.amount_paise,o.created_at,e.title from orders o join ebooks e on e.id=o.ebook_id order by o.order_number desc limit 5');
   res.json({metrics:{...totals,customers:customers.total,products:products.total},daily,bestsellers,recent});
 }));
 router.get('/products',wrap(async(req,res)=>{const [products]=await pool.query('select e.*,c.name category,(select count(*) from orders o where o.ebook_id=e.id and o.status=\'paid\') sales from ebooks e left join categories c on c.id=e.category_id order by e.id desc');res.json({products});}));
@@ -89,13 +89,13 @@ router.post('/categories',wrap(category));router.put('/categories/:id',wrap(cate
 router.get('/coupons',wrap(async(req,res)=>{const [coupons]=await pool.query('select * from coupons order by id desc');res.json({coupons});}));
 async function coupon(req,res){const b=req.body,code=text(b.code,40).toUpperCase(),type=b.type==='flat'?'flat':'percent';if(!/^[A-Z0-9_-]{2,40}$/.test(code))fail('Use letters, numbers, hyphens or underscores for the coupon code.');const value=type==='flat'?paise(b.value):number(b.value,1,100);if(value<=0)fail('Discount must be positive.');const expires=b.expires?text(b.expires,30):null;if(expires&&!/^\d{4}-\d{2}-\d{2}$/.test(expires))fail('Choose a valid expiry date.');const ebook=b.ebook_id?Math.round(number(b.ebook_id,1)):null;if(ebook)await exists('ebooks',ebook);const values=[code,type,value,paise(b.minimum||0),b.limit?Math.round(number(b.limit,1)):null,expires?expires+' 23:59:59':null,b.status==='inactive'?'inactive':'active',ebook];let id=req.params.id;if(id){await exists('coupons',id);await pool.execute('update coupons set code=?,discount_type=?,discount_value=?,minimum_paise=?,usage_limit=?,expires_at=?,status=?,ebook_id=? where id=?',[...values,id]);}else{const [r]=await pool.execute('insert into coupons(code,discount_type,discount_value,minimum_paise,usage_limit,expires_at,status,ebook_id) values (?,?,?,?,?,?,?,?)',values);id=r.insertId;}await audit(req,'Coupon saved',{id,code});res.json({id});}
 router.post('/coupons',wrap(coupon));router.put('/coupons/:id',wrap(coupon));
-router.get('/orders',wrap(async(req,res)=>{const [orders]=await pool.query(`select o.*,u.email,u.is_active as customer_active,p.full_name,p.mobile,e.title,e.slug,e.author,e.cover_path,case when ${require('../purchase-access').paidCondition()} then 1 else 0 end as can_download from orders o join users u on u.id=o.user_id left join profiles p on p.user_id=u.id join ebooks e on e.id=o.ebook_id order by o.id desc`);res.json({orders});}));
+router.get('/orders',wrap(async(req,res)=>{const [orders]=await pool.query(`select o.*,u.email,u.is_active as customer_active,p.full_name,p.mobile,e.title,e.slug,e.author,e.cover_path,case when ${require('../purchase-access').paidCondition()} then 1 else 0 end as can_download from orders o join users u on u.id=o.user_id left join profiles p on p.user_id=u.id join ebooks e on e.id=o.ebook_id order by o.order_number desc`);res.json({orders});}));
 router.post('/orders/:id/resend',wrap(async(req,res)=>{
  const [[o]]=await pool.execute(`select o.*,u.email,e.title,e.pdf_path,e.slug from orders o join users u on u.id=o.user_id join ebooks e on e.id=o.ebook_id where o.id=?`,[req.params.id]);
  if(!o||o.status!=='paid'||(o.payment_method==='test'?!require('../purchase-access').testEnabled():!o.verified_at))fail('Only verified paid orders can be resent.');
  const pdf=filePath(o.pdf_path||(o.slug==='fitness-for-busy-professionals'?'server/private/ebooks/fitness-for-busy-professionals.pdf':''),'pdf');if(!pdf)fail('Upload the product PDF first.');
  const [claim]=await pool.execute('update orders set email_attempt_at=now(),email_attempt_count=email_attempt_count+1 where id=? and (email_attempt_at is null or email_attempt_at<date_sub(now(),interval 2 minute))',[o.id]);if(!claim.affectedRows)fail('Wait two minutes between delivery attempts.',429);
- try{await sendBookEmail(o.delivery_email||o.email,o.id,o.amount_paise,path.resolve(__dirname,'../..',pdf),o.title,o.payment_method==='test');}catch(error){await pool.execute('update orders set email_last_error=? where id=?',[String(error.code||'DELIVERY_FAILED').replace(/[^A-Z0-9_]/gi,'').slice(0,60),o.id]);fail('The email could not be sent. Check the email configuration and try again.',502);}
+ try{await sendBookEmail(o.delivery_email||o.email,o.order_number,o.amount_paise,path.resolve(__dirname,'../..',pdf),o.title,o.payment_method==='test');}catch(error){await pool.execute('update orders set email_last_error=? where id=?',[String(error.code||'DELIVERY_FAILED').replace(/[^A-Z0-9_]/gi,'').slice(0,60),o.id]);fail('The email could not be sent. Check the email configuration and try again.',502);}
  await pool.execute('update orders set email_sent_at=now(),email_last_error=null where id=?',[o.id]);await audit(req,'Download email resent',{order:o.id});res.json({ok:true});
 }));
 router.post('/orders/:id/refund',wrap(async(req,res)=>{

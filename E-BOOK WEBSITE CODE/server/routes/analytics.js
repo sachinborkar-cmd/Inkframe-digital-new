@@ -17,7 +17,7 @@ router.get('/',async(req,res,next)=>{try{
   const [bestsellers]=await pool.query(`select e.title,count(*) purchases,sum(o.amount_paise) revenue_paise
     from orders o join ebooks e on e.id=o.ebook_id where o.status='paid' and verified_at is not null and o.${real}
     group by e.id order by purchases desc,revenue_paise desc limit 10`);
-  const [recent]=await pool.query('select o.id,o.status,o.amount_paise,o.payment_method,o.created_at,e.title from orders o join ebooks e on e.id=o.ebook_id order by o.id desc limit 8');
+  const [recent]=await pool.query('select o.id,o.order_number,o.status,o.amount_paise,o.payment_method,o.created_at,e.title from orders o join ebooks e on e.id=o.ebook_id order by o.order_number desc limit 8');
   res.json({totals:{...totals,...counts},monthly,bestsellers,recent});
 }catch(e){next(e);}});
 module.exports=router;

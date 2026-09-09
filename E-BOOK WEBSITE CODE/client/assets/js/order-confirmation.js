@@ -11,7 +11,7 @@
     description.textContent = !paid ? 'A download is available only for completed purchases.' : sent
       ? 'Your purchased PDFs have been sent to ' + order.delivery_email + '. Check your inbox and spam folder.'
       : 'Your book is ready to download. Email delivery is pending; we’ll retry automatically. You can also retry here after two minutes.';
-    note.textContent = 'Test order #' + order.id + ' | INR ' + (orders.reduce(function(sum,o){return sum+o.amount_paise},0) / 100).toLocaleString('en-IN') + ' | No money was charged.';
+    note.textContent = 'Test order #' + order.order_number + ' | INR ' + (orders.reduce(function(sum,o){return sum+o.amount_paise},0) / 100).toLocaleString('en-IN') + ' | No money was charged.';
     var download=document.getElementById('order-download');download.hidden=true;
     var links=document.getElementById('order-files');if(!links){links=document.createElement('div');links.id='order-files';download.parentNode.appendChild(links);}links.replaceChildren();
     orders.filter(function(o){return o.status==='paid'}).forEach(function(o){var link=document.createElement('a');link.className='btn btn-primary mt-3';link.href='/api/library/'+encodeURIComponent(o.slug)+'/download';link.textContent='Download '+o.title;links.appendChild(link);});

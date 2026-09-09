@@ -29,7 +29,8 @@ async function page(products, slug = 'test-book') {
   assert.equal(el('product-buy').dataset.product, book.slug);
   assert.equal(el('product-buy').href, '/checkout/?product=test-book');
   assert.equal(el('product-cart').dataset.product, book.slug);
-  assert.equal(el('product-sample').href, book.sample_path);
+  assert.ok(!el('product-previews').innerHTML.includes('<a '));
+  assert.ok(el('product-previews').innerHTML.includes('Cover'));
   assert.equal(el('preview-pages').hidden, false);
   assert.equal(el('reader-testimonials').hidden, false);
   assert.ok(el('product-previews').innerHTML.includes('&lt;img'));

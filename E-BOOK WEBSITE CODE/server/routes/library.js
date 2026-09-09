@@ -27,7 +27,7 @@ router.get('/', async (request, response, next) => {
       [request.session.userId]
     );
     const [orders] = await pool.execute(
-      `select o.id, e.slug, e.title, e.author, e.cover_path, o.amount_paise, o.status, o.payment_method, o.created_at,
+      `select o.id, o.order_number, e.slug, e.title, e.author, e.cover_path, o.amount_paise, o.status, o.payment_method, o.created_at,
        o.download_count, o.email_sent_at, case when ${paidCondition()} then 1 else 0 end as can_download
        from orders o join ebooks e on e.id=o.ebook_id where o.user_id=? order by o.created_at desc, o.id desc`,
       [request.session.userId]

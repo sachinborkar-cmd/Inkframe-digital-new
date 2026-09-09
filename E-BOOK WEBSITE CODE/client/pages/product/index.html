@@ -16,26 +16,39 @@
   <p id="product-status" role="status">Loading ebook...</p>
   <article id="product-detail" hidden>
     <section class="product-hero" aria-labelledby="product-title">
-      <div class="product-art"><img id="product-cover" alt=""><span id="product-cover-placeholder" hidden>PDF ebook</span></div>
+      <div class="product-showcase"><div class="product-art"><span class="edition-label">THE DIGITAL EDITION</span><img id="product-cover" alt=""><span id="product-cover-placeholder" hidden>PDF ebook</span></div><a id="cover-sample" class="sample-link" href="#preview-pages" aria-haspopup="dialog" aria-controls="sample-reader" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 5v15M3 4c4-1 6 0 9 2 3-2 5-3 9-2v14c-4-1-6 0-9 2-3-2-5-3-9-2z"/></svg>Read sample <span aria-hidden="true">&nearr;</span></a><p class="showcase-caption">A book for your digital bookshelf.</p></div>
       <div class="product-intro">
         <p class="product-eyebrow">THE INKFRAME BOOKSHELF <span id="product-category"></span></p>
         <h1 id="product-title"></h1>
-        <p id="product-author" class="muted"></p>
-        <nav class="product-jump" aria-label="Explore this ebook"><a href="#about-book">About the book</a><a id="preview-jump" href="#preview-pages" hidden>Preview pages</a><a id="testimonial-jump" href="#reader-testimonials" hidden>Reader testimonials</a></nav>
+        <p class="product-byline">By <span id="product-author"></span></p><p id="product-summary" class="product-summary"></p>
+        <nav class="product-jump" aria-label="Explore this ebook"><a href="#about-book">About the book</a><a id="preview-jump" href="#preview-pages" hidden>Preview pages</a><a id="testimonial-jump" href="#reader-testimonials" hidden>Reader notes</a></nav>
         <div class="product-purchase">
-          <p class="product-eyebrow">DIGITAL EDITION &middot; PDF</p>
-          <p id="product-price"></p>
+          <div class="purchase-heading"><span class="format-pill">PDF ebook</span><span>Digital download</span></div>
+          <div class="purchase-price"><p id="product-price"></p><span>One-time purchase</span></div>
           <div class="product-actions"><a id="product-buy" class="btn btn-primary" data-buy-now href="/checkout/">Buy now</a><button id="product-cart" type="button" class="btn btn-ghost" data-add-cart>Add to cart</button></div>
-          <p class="muted">Your ebook is delivered by email after checkout.</p>
+          <ul class="purchase-includes"><li><span aria-hidden="true">&#10003;</span> PDF delivered by email after checkout</li><li><span aria-hidden="true">&#10003;</span> Download again from My Library</li><li><span aria-hidden="true">&#10003;</span> Read with a PDF reader on your devices</li></ul><p class="purchase-note">Digital book only. No physical copy is shipped.</p><div class="purchase-help"><a href="/contact/">Questions before buying?</a><a href="/terms/">Purchase &amp; refund terms &nearr;</a></div>
         </div>
       </div>
     </section>
-    <section id="about-book" class="product-section" aria-labelledby="about-title"><p class="product-eyebrow">A CLOSER LOOK</p><h2 id="about-title">About the book</h2><p id="product-description"></p></section>
-    <section id="preview-pages" class="product-section" hidden aria-labelledby="preview-title"><p class="product-eyebrow">LOOK INSIDE</p><h2 id="preview-title">Read before you buy</h2><p class="muted">Explore a few pages from the book. Select any page to see it in full.</p><div id="product-previews" class="product-previews"></div><a id="product-sample" class="btn btn-ghost" target="_blank" rel="noopener" hidden>Read sample PDF &nearr;</a></section>
-    <section id="reader-testimonials" class="product-section" hidden aria-labelledby="testimonials-title"><p class="product-eyebrow">FROM OUR READERS</p><h2 id="testimonials-title">Reader testimonials</h2><div id="product-testimonials" class="product-testimonials"></div></section>
+    <dl class="book-facts" aria-label="Book at a glance"><div><dt>Format</dt><dd>PDF ebook</dd></div><div><dt>Read on</dt><dd>Phone, tablet or computer</dd></div><div><dt>Delivery</dt><dd>Email &amp; My Library</dd></div><div><dt>Sold by</dt><dd id="product-seller">Inkframe Press</dd></div></dl>
+    <nav class="book-navigation" aria-label="Book information"><a href="#about-book">Overview</a><a href="#book-details">Book details</a><a href="#reading-help">Reading &amp; delivery</a></nav>
+    <div class="book-overview"><section id="about-book" class="product-section" aria-labelledby="about-title"><p class="product-eyebrow">A CLOSER LOOK</p><h2 id="about-title">About the book</h2><p id="product-description"></p></section><aside id="book-details" class="book-details" aria-labelledby="details-title"><h2 id="details-title">Book details</h2><dl><div><dt>Author</dt><dd id="detail-author"></dd></div><div><dt>Edition</dt><dd>Digital &middot; PDF</dd></div><div id="detail-category-row" hidden><dt>Category</dt><dd id="detail-category"></dd></div><div><dt>Access</dt><dd>Your Inkframe account</dd></div></dl><a href="/contact/">Ask us about this book <span aria-hidden="true">&nearr;</span></a></aside></div>
+    <section id="preview-pages" class="product-section" hidden aria-labelledby="preview-title"><p class="product-eyebrow">LOOK INSIDE</p><h2 id="preview-title">Read before you buy</h2><p class="muted">Explore the cover and preview pages from this book.</p><div id="product-previews" class="product-previews"></div></section>
+    <section id="reader-testimonials" class="product-section" hidden aria-labelledby="testimonials-title"><p class="product-eyebrow">FROM OUR READERS</p><h2 id="testimonials-title">Notes from readers</h2><p class="muted">Testimonials shared by the store.</p><div id="product-testimonials" class="product-testimonials"></div></section>
+    <section id="reading-help" class="product-section reading-help" aria-labelledby="reading-title"><div><p class="product-eyebrow">BEFORE YOU BEGIN</p><h2 id="reading-title">A little clarity,<br>a better reading experience.</h2><p class="muted">Everything you need to know about your digital book.</p><a class="help-link" href="/contact/">We&rsquo;re here to help &nearr;</a></div><div class="reading-questions"><details open><summary>How will I receive my book?</summary><p>After your order is completed, your PDF is sent to the email address used at checkout. You can also sign in to <a href="/library/">My Library</a> to download it. If the email is delayed, check your spam folder or contact us.</p></details><details><summary>Can I read it on my phone or tablet?</summary><p>Yes. Open the downloaded file with a PDF reader on your phone, tablet or computer. This is a PDF edition, so a Kindle device or subscription is not required.</p></details><details><summary>Can I preview the book first?</summary><p id="sample-help">Available sample pages appear in the preview section above. You can contact us if you need more information before purchasing.</p></details><details><summary>What if I need help with my purchase?</summary><p>Visit our <a href="/contact/">contact page</a> for help with downloads or order questions. Please read our <a href="/terms/">purchase and refund terms</a> before ordering.</p></details></div></section>
+    <footer class="product-footer"><span>INKFRAME <span aria-hidden="true">&middot;</span> YOUR DIGITAL BOOKSHELF</span><div><a href="/contact/">Contact</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a></div></footer>
   </article>
   <noscript>Please enable JavaScript to view the product details and purchase this ebook.</noscript>
 </main>
+<dialog id="sample-reader" class="sample-reader" aria-labelledby="reader-title">
+  <div class="reader-shell">
+    <header class="reader-header"><button type="button" id="reader-close" class="reader-back">&larr; <span>Back to book</span></button><div class="reader-heading"><span>YOU ARE READING A SAMPLE</span><h2 id="reader-title"></h2></div><div class="reader-toolbar"><div class="reader-modes" aria-label="Sample format"><button id="reader-pages-mode" type="button" aria-pressed="true">Preview pages</button><button id="reader-pdf-mode" type="button" aria-pressed="false" hidden>Sample PDF</button></div><button type="button" id="reader-zoom" aria-pressed="false">Enlarge page</button><a id="reader-pdf-link" target="_blank" rel="noopener" hidden>Open PDF &nearr;</a></div><a id="reader-buy" class="btn btn-primary" href="/checkout/">Get the book</a></header>
+    <div id="reader-stage" class="reader-stage"><button type="button" id="reader-previous" class="reader-arrow" aria-label="Previous sample page">&lsaquo;</button><div id="reader-paper" class="reader-paper"><img id="reader-image" alt=""><p id="reader-error" role="status" hidden>This sample page could not be loaded. Try another page or reopen the sample.</p></div><button type="button" id="reader-next" class="reader-arrow" aria-label="Next sample page">&rsaquo;</button></div>
+    <iframe id="reader-pdf" class="reader-pdf" title="Sample PDF reader" hidden></iframe>
+    <footer class="reader-footer"><input id="reader-progress" type="range" min="1" max="1" value="1" aria-label="Sample page"><p id="reader-position" role="status"></p><span>Sample edition &middot; The full book is available after purchase.</span></footer>
+  </div>
+</dialog>
 <script src="/assets/js/site.js"></script>
+<script src="/assets/js/sample-reader.js"></script>
 </body>
 </html>
