@@ -1,0 +1,26 @@
+﻿function orderDetails(r){
+ let customer=r.customer_details;
+ if(typeof customer==='string'){try{customer=JSON.parse(customer);}catch{customer={};}}
+ if(!customer||typeof customer!=='object'||Array.isArray(customer))customer={};
+ const textValue=value=>typeof value==='string'||typeof value==='number'?String(value):'';
+ const field=(label,value)=>'<div><dt>'+escape(label)+'</dt><dd>'+escape(value||'Not recorded')+'</dd></div>';
+ const section=(title,fields,note='')=>'<section class="order-detail-section"><h3>'+escape(title)+'</h3><dl>'+fields+'</dl>'+(note?'<p class="order-detail-note">'+escape(note)+'</p>':'')+'</section>';
+ const test=r.payment_method==='test',eligible=Boolean(Number(r.can_download)),attempts=Number(r.email_attempt_count||0);
+ const emailStatus=r.email_sent_at?'Sent — accepted by mail server':!eligible?'Not scheduled':attempts>=5?'Needs attention — automatic retries stopped':r.email_last_error?'Not sent — retry pending':'Pending delivery';
+ const problems={EAUTH:'Email account sign-in failed. Check the store’s email settings.',ECONNECTION:'The mail server could not be reached.',ETIMEDOUT:'The mail server took too long to respond.',ESOCKET:'The connection to the mail server was interrupted.',EENVELOPE:'The sender or recipient address was rejected.',EMESSAGE:'The mail server did not accept the email.',ENOENT:'The book attachment could not be found.'};
+ const problem=r.email_last_error?(problems[r.email_last_error]||'The latest email attempt did not complete. Check the email settings and book attachment.'):'None recorded';
+ const status={paid:'Paid',pending:'Awaiting payment',refunded:'Refunded',cancelled:'Cancelled',failed:'Payment failed'}[r.status]||'Not recorded';
+ let cover='';
+ try{const url=new URL(r.cover_path||'',location.origin);if(r.cover_path&&url.origin===location.origin&&url.pathname.startsWith('/'))cover='<img src="'+escape(url.pathname)+'" alt="'+escape(r.title)+' cover" width="64" height="88">';}catch{}
+ let html='<div class="order-detail-book">'+cover+'<div><h3>'+escape(r.title)+'</h3><p>'+escape(r.author||'Digital ebook')+'</p><span class="status-badge status-'+(r.status==='paid'?'green':r.status==='refunded'?'red':'amber')+'">'+escape(status)+'</span>'+(test?' <span class="status-badge status-gray">Test order</span>':'')+'</div><strong>'+money(r.amount_paise)+'</strong></div><div class="order-detail-grid">';
+ html+=section('Order & payment',field('Order number','#'+r.id)+field('Placed on',date(r.created_at))+field(test?'Simulated order total':'Order total',money(r.amount_paise))+field('Payment status',status)+field('Payment method',test?'Test payment':({razorpay:'Razorpay',stripe:'Stripe',paypal:'PayPal'}[r.payment_method]||'Not recorded'))+field('Payment verified',test?'Not applicable — test payment':r.verified_at?date(r.verified_at):'Not confirmed'),test?'No money was charged for this order.':'');
+ html+=section('Customer at checkout',field('Full name',textValue(customer.full_name)||r.full_name)+field('Account email',r.email)+field('Phone',Object.hasOwn(customer,'phone')?(textValue(customer.phone)||'Not provided'):(r.mobile||'Not provided'))+field('Country',textValue(customer.country))+field('Account access',Number(r.customer_active)?'Active':'Suspended'));
+ html+=section('Email delivery',field('Delivery status',emailStatus)+field('Recipient',r.delivery_email||r.email)+field('Last email sent',r.email_sent_at?date(r.email_sent_at):'Not sent yet')+field('Last attempt',r.email_attempt_at?date(r.email_attempt_at):'Not recorded')+field('Recorded attempts',attempts?String(attempts):'No attempts recorded')+field('Latest delivery issue',problem),r.email_sent_at?'The mail server accepted the email. Inbox arrival and whether the customer opened it are not tracked.':eligible?(attempts>=5?'Automatic retries have reached their limit. Use Resend email to try again.':'Unsent emails are retried automatically, up to five attempts. Allow at least two minutes between manual attempts.'):'Email delivery is available only for eligible paid orders.');
+ html+=section('Book access',field('Format','PDF ebook')+field('Download access',eligible?(Number(r.customer_active)?'Available in My Library':'Account suspended — restore access to sign in'):r.status==='refunded'?'Removed after refund':'Not available')+field('Downloads',String(Number(r.download_count||0)))+field('Delivery method','Email attachment and My Library'),'Download dates and individual device activity are not recorded.');
+ html+='</div>';
+ const related=r.checkout_group?data.filter(o=>o.checkout_group===r.checkout_group&&String(o.id)!==String(r.id)):[];
+ if(related.length)html+='<section class="order-detail-section order-related"><h3>Other books in this checkout</h3>'+related.map(o=>'<div>'+button('Order #'+o.id,'details',o.id)+'<span>'+escape(o.title)+'</span><strong>'+money(o.amount_paise)+'</strong></div>').join('')+'</section>';
+ html+='<p class="order-detail-note">This order records the final amount. A separate original price, coupon, and tax breakdown was not saved.</p>';
+ html+='<div class="order-detail-actions">'+(eligible?button('Resend email','resend',r.id):'')+'<a class="btn btn-ghost" href="/contact/" target="_blank" rel="noopener">Store contact page</a></div>';
+ return html;
+}

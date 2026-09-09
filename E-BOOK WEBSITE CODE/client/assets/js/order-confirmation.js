@@ -10,7 +10,7 @@
     heading.textContent = paid ? 'Your test payment is complete.' : 'Your order is ' + order.status + '.';
     description.textContent = !paid ? 'A download is available only for completed purchases.' : sent
       ? 'Your purchased PDFs have been sent to ' + order.delivery_email + '. Check your inbox and spam folder.'
-      : 'Your book is ready to download, but email delivery is not confirmed yet. You can retry in two minutes.';
+      : 'Your book is ready to download. Email delivery is pending; we’ll retry automatically. You can also retry here after two minutes.';
     note.textContent = 'Test order #' + order.id + ' | INR ' + (orders.reduce(function(sum,o){return sum+o.amount_paise},0) / 100).toLocaleString('en-IN') + ' | No money was charged.';
     var download=document.getElementById('order-download');download.hidden=true;
     var links=document.getElementById('order-files');if(!links){links=document.createElement('div');links.id='order-files';download.parentNode.appendChild(links);}links.replaceChildren();

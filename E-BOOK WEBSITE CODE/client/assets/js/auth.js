@@ -175,6 +175,10 @@
       profileForm.elements.full_name.value = result.profile.full_name || '';
       profileForm.elements.mobile.value = result.profile.mobile || '';
       document.getElementById('profile-fields').disabled = false;
+      var passwordStatus = document.getElementById('profile-password-status');
+      var passwordAction = document.getElementById('profile-password-action');
+      if (passwordStatus) passwordStatus.textContent = result.profile.has_password ? 'A password is set for your account.' : 'You haven’t created a password yet. You can still sign in with an email code or Google.';
+      if (passwordAction) passwordAction.textContent = result.profile.has_password ? 'Change password' : 'Create a password';
       document.getElementById('profile-intro').textContent = result.profile.full_name
         ? 'Review or update your customer details.'
         : 'Complete your profile to keep your purchases linked to you.';
@@ -203,56 +207,4 @@
     });
   }
 
-  var library = document.getElementById('customer-library');
-  if (library) {
-    api('/api/library').then(function (result) {
-      var empty = document.getElementById('library-empty');
-      document.getElementById('library-status').textContent = '';
-      renderHistory(result.orders || []);
-      if (!result.books.length) {
-        empty.hidden = false;
-        return;
-      }
-      result.books.forEach(function (book) {
-        var card = document.createElement('div');
-        card.className = 'card p-6';
-        var title = document.createElement('h3');
-        title.className = 'font-semibold';
-        title.textContent = book.title;
-        var author = document.createElement('p');
-        author.className = 'text-sm muted mt-1';
-        author.textContent = book.author;
-        var actions = document.createElement('div');
-        actions.className = 'mt-4 flex gap-2';
-        if (book.pdf_path) actions.appendChild(downloadLink(book.pdf_path, 'PDF', 'btn btn-primary flex-1'));
-        if (book.epub_path) actions.appendChild(downloadLink(book.epub_path, 'EPUB', 'btn btn-ghost flex-1'));
-        card.appendChild(title);
-        card.appendChild(author);
-        card.appendChild(actions);
-        library.appendChild(card);
-      });
-    }).catch(function (error) { document.getElementById('library-status').textContent = error.message; });
-  }
-
-  function renderHistory(orders) {
-    var root = document.getElementById('purchase-history');
-    if (!orders.length) { root.textContent='You have no previous orders yet.'; return; }
-    orders.forEach(function(order) {
-      var row=document.createElement('article'); row.className='card p-5';
-      var title=document.createElement('h3'); title.className='font-semibold'; title.textContent=order.title;
-      var details=document.createElement('p'); details.className='text-sm muted mt-2';
-      details.textContent='Order #'+order.id+' | '+new Date(order.created_at).toLocaleDateString('en-IN')+' | INR '+(order.amount_paise/100).toLocaleString('en-IN')+' | '+order.status+(order.payment_method==='test'?' (test payment)':'');
-      row.append(title,details);
-      if(order.payment_method==='test') row.appendChild(downloadLink('/thank-you/?order='+encodeURIComponent(order.id),'View order','nav-link mt-3'));
-      root.appendChild(row);
-    });
-  }
-
-  function downloadLink(path, label, className) {
-    var link = document.createElement('a');
-    link.href = path;
-    link.className = className;
-    link.textContent = label;
-    return link;
-  }
 })();

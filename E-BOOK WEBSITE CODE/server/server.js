@@ -127,7 +127,11 @@ app.use((error, request, response, next) => {
 
 ensureSchema().then(() => {
   const server = app.listen(port);
-  server.once('listening', () => console.log(`Inkframe Press is running at http://localhost:${port}`));
+  server.once('listening', () => {
+    console.log(`Inkframe Press is running at http://localhost:${port}`);
+    const stopDeliveryRetries = require('./book-delivery').startDeliveryRetries();
+    server.once('close', stopDeliveryRetries);
+  });
   server.once('error', error => {
     console.error(error.code === 'EADDRINUSE' ? `Port ${port} is already in use. Stop the existing project server before starting this one.` : error);
     process.exit(1);

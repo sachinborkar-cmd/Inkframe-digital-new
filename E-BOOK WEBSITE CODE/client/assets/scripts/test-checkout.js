@@ -53,6 +53,12 @@ const oldMode = process.env.NODE_ENV, oldEnabled = process.env.TEST_PAYMENTS_ENA
     const order = results[0].body.order;
     assert.equal(order.id, results[1].body.order.id);
     assert.equal(order.status,'paid'); assert.equal(order.email_sent_at,null); assert.equal(sends,1);
+    const delivery = require('../../../server/book-delivery');
+    await delivery.retryPending();
+    assert.equal(sends,1,'Automatic retries respect the delivery cooldown');
+    const [[failedDelivery]] = await pool.execute('select email_attempt_count,email_last_error from orders where id=?',[order.id]);
+    assert.equal(failedDelivery.email_attempt_count,1);
+    assert.equal(failedDelivery.email_last_error,'DELIVERY_FAILED');
     const [[book]] = await pool.execute('select price_paise from ebooks where slug=?',payload.slugs);
     assert.equal(order.amount_paise,book.price_paise-Math.floor(book.price_paise*0.2));
     const [[usage]] = await pool.execute('select used_count from coupons where id=?',[couponId]);
@@ -61,6 +67,11 @@ const oldMode = process.env.NODE_ENV, oldEnabled = process.env.TEST_PAYMENTS_ENA
     assert.equal((await request('/api/test-checkout/'+order.id,undefined,false)).status,401);
     await pool.execute('update orders set email_attempt_at=date_sub(now(),interval 3 minute) where id=?',[order.id]);
     failEmail=false;
+    await Promise.all([delivery.retryPending(),delivery.retryPending()]);
+    assert.equal(sends,2,'Automatic retry sends a pending email once');
+    const [[sentDelivery]] = await pool.execute('select email_sent_at,email_last_error from orders where id=?',[order.id]);
+    assert.ok(sentDelivery.email_sent_at);
+    assert.equal(sentDelivery.email_last_error,null);
     const retry=await request('/api/test-checkout/'+order.id+'/retry-email',{});
     assert.ok(retry.body.order.email_sent_at); assert.equal(sends,2);
     await request('/api/test-checkout/'+order.id+'/retry-email',{}); assert.equal(sends,2);
@@ -71,6 +82,11 @@ const oldMode = process.env.NODE_ENV, oldEnabled = process.env.TEST_PAYMENTS_ENA
     assert.equal(library.body.books[0].pdf_path,'/api/library/fitness-for-busy-professionals/download');
     assert.equal(library.body.orders[0].id,order.id);
     assert.equal(library.body.orders[0].payment_method,'test');
+    assert.equal(library.body.orders[0].can_download,true);
+    assert.equal(library.body.orders[0].download_url,'/api/library/fitness-for-busy-professionals/download');
+    assert.ok(Object.hasOwn(library.body.orders[0],'cover_path'));
+    assert.ok(Object.hasOwn(library.body.orders[0],'download_count'));
+    assert.equal((await request('/api/profile')).body.profile.has_password,false);
     assert.equal((await request('/api/profile')).body.profile.full_name,'Checkout Test');
     assert.equal((await request('/api/profile',{full_name:'A',mobile:''})).status,400);
     assert.equal((await request('/api/profile',{full_name:'Updated Customer',mobile:'invalid'})).status,400);

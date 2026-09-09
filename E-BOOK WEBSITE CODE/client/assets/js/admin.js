@@ -52,6 +52,33 @@ function activitySummary(record){
   default:return 'Recorded an admin action.';
  }
 }
+function orderDetails(r){
+ let customer=r.customer_details;
+ if(typeof customer==='string'){try{customer=JSON.parse(customer);}catch{customer={};}}
+ if(!customer||typeof customer!=='object'||Array.isArray(customer))customer={};
+ const textValue=value=>typeof value==='string'||typeof value==='number'?String(value):'';
+ const field=(label,value)=>'<div><dt>'+escape(label)+'</dt><dd>'+escape(value||'Not recorded')+'</dd></div>';
+ const section=(title,fields,note='')=>'<section class="order-detail-section"><h3>'+escape(title)+'</h3><dl>'+fields+'</dl>'+(note?'<p class="order-detail-note">'+escape(note)+'</p>':'')+'</section>';
+ const test=r.payment_method==='test',eligible=Boolean(Number(r.can_download)),attempts=Number(r.email_attempt_count||0);
+ const emailStatus=r.email_sent_at?'Sent — accepted by mail server':!eligible?'Not scheduled':attempts>=5?'Needs attention — automatic retries stopped':r.email_last_error?'Not sent — retry pending':'Pending delivery';
+ const problems={EAUTH:'Email account sign-in failed. Check the store’s email settings.',ECONNECTION:'The mail server could not be reached.',ETIMEDOUT:'The mail server took too long to respond.',ESOCKET:'The connection to the mail server was interrupted.',EENVELOPE:'The sender or recipient address was rejected.',EMESSAGE:'The mail server did not accept the email.',ENOENT:'The book attachment could not be found.'};
+ const problem=r.email_last_error?(problems[r.email_last_error]||'The latest email attempt did not complete. Check the email settings and book attachment.'):'None recorded';
+ const status={paid:'Paid',pending:'Awaiting payment',refunded:'Refunded',cancelled:'Cancelled',failed:'Payment failed'}[r.status]||'Not recorded';
+ let cover='';
+ try{const url=new URL(r.cover_path||'',location.origin);if(r.cover_path&&url.origin===location.origin&&url.pathname.startsWith('/'))cover='<img src="'+escape(url.pathname)+'" alt="'+escape(r.title)+' cover" width="64" height="88">';}catch{}
+ let html='<div class="order-detail-book">'+cover+'<div><h3>'+escape(r.title)+'</h3><p>'+escape(r.author||'Digital ebook')+'</p><span class="status-badge status-'+(r.status==='paid'?'green':r.status==='refunded'?'red':'amber')+'">'+escape(status)+'</span>'+(test?' <span class="status-badge status-gray">Test order</span>':'')+'</div><strong>'+money(r.amount_paise)+'</strong></div><div class="order-detail-grid">';
+ html+=section('Order & payment',field('Order number','#'+r.id)+field('Placed on',date(r.created_at))+field(test?'Simulated order total':'Order total',money(r.amount_paise))+field('Payment status',status)+field('Payment method',test?'Test payment':({razorpay:'Razorpay',stripe:'Stripe',paypal:'PayPal'}[r.payment_method]||'Not recorded'))+field('Payment verified',test?'Not applicable — test payment':r.verified_at?date(r.verified_at):'Not confirmed'),test?'No money was charged for this order.':'');
+ html+=section('Customer at checkout',field('Full name',textValue(customer.full_name)||r.full_name)+field('Account email',r.email)+field('Phone',Object.hasOwn(customer,'phone')?(textValue(customer.phone)||'Not provided'):(r.mobile||'Not provided'))+field('Country',textValue(customer.country))+field('Account access',Number(r.customer_active)?'Active':'Suspended'));
+ html+=section('Email delivery',field('Delivery status',emailStatus)+field('Recipient',r.delivery_email||r.email)+field('Last email sent',r.email_sent_at?date(r.email_sent_at):'Not sent yet')+field('Last attempt',r.email_attempt_at?date(r.email_attempt_at):'Not recorded')+field('Recorded attempts',attempts?String(attempts):'No attempts recorded')+field('Latest delivery issue',problem),r.email_sent_at?'The mail server accepted the email. Inbox arrival and whether the customer opened it are not tracked.':eligible?(attempts>=5?'Automatic retries have reached their limit. Use Resend email to try again.':'Unsent emails are retried automatically, up to five attempts. Allow at least two minutes between manual attempts.'):'Email delivery is available only for eligible paid orders.');
+ html+=section('Book access',field('Format','PDF ebook')+field('Download access',eligible?(Number(r.customer_active)?'Available in My Library':'Account suspended — restore access to sign in'):r.status==='refunded'?'Removed after refund':'Not available')+field('Downloads',String(Number(r.download_count||0)))+field('Delivery method','Email attachment and My Library'),'Download dates and individual device activity are not recorded.');
+ html+='</div>';
+ const related=r.checkout_group?data.filter(o=>o.checkout_group===r.checkout_group&&String(o.id)!==String(r.id)):[];
+ if(related.length)html+='<section class="order-detail-section order-related"><h3>Other books in this checkout</h3>'+related.map(o=>'<div>'+button('Order #'+o.id,'details',o.id)+'<span>'+escape(o.title)+'</span><strong>'+money(o.amount_paise)+'</strong></div>').join('')+'</section>';
+ html+='<p class="order-detail-note">This order records the final amount. A separate original price, coupon, and tax breakdown was not saved.</p>';
+ html+='<div class="order-detail-actions">'+button('Refresh status','order-refresh',r.id)+(eligible?button('Resend email','resend',r.id):'')+'</div>';
+ return html;
+}
+
 function badge(value){const green=['paid','published','active','verified'],amber=['pending','draft','unverified'];return '<span class="status-badge status-'+(green.includes(value)?'green':amber.includes(value)?'amber':value==='refunded'?'red':'gray')+'">'+escape(value)+'</span>';}
 function person(name,email){return '<div class="customer-cell"><span class="customer-avatar" aria-hidden="true">'+escape((name||email||'?').slice(0,2).toUpperCase())+'</span><div><span class="cell-primary">'+escape(name||'Customer')+'</span><span class="cell-secondary">'+escape(email)+'</span></div></div>';}
 function input(name,label,value='',type='text',extra=''){return '<label>'+escape(label)+'<input class="field mt-2" name="'+name+'" type="'+type+'" value="'+escape(value)+'" '+extra+'></label>';}
@@ -134,14 +161,15 @@ document.addEventListener('click',async e=>{
   if(a==='next-page'||a==='previous-page'){page+=a==='next-page'?1:-1;renderList();return;}
   if(a==='add'||a==='edit')await editor(r||{});
   if(a==='archive'||a==='bulk'){const ids=a==='archive'?[id]:Array.from(document.querySelectorAll('[data-product-check]:checked')).map(c=>c.value);if(!ids.length)throw Error('Select products first.');if(!confirm('Archive '+ids.length+' product(s)? Existing buyers keep access.'))return;for(const i of ids)await api('/products/'+i,{method:'DELETE'});await load();message('Products archived.');}
-  if(a==='details')open('Order #'+id,'<p>'+escape(r.title)+'</p><p class="mt-3">'+escape(r.email)+' | '+badge(r.status)+' | '+money(r.amount_paise)+'</p><h3 class="font-bold mt-5">Checkout details</h3><pre>'+escape(JSON.stringify(typeof r.customer_details==='string'?JSON.parse(r.customer_details):r.customer_details||{},null,2))+'</pre><p class="mt-4">Delivery address: '+escape(r.delivery_email||r.email)+'</p><p>Email sent: '+escape(date(r.email_sent_at))+'</p>');
-  if(a==='resend'||a==='refund'){if(!confirm(a==='resend'?'Send the PDF to this customer again?':'Refund this test order and revoke its download access? No money will move.'))return;await send('/orders/'+id+'/'+a,{});await load();message(a==='resend'?'Email accepted for delivery.':'Test order refunded.');}
+  if(a==='details')open('Order #'+id,orderDetails(r));
+  if(a==='order-refresh'){await load();const updated=data.find(o=>String(o.id)===id);if(updated)$('#dialog-body').innerHTML=orderDetails(updated);}
+  if(a==='resend'||a==='refund'){if(!confirm(a==='resend'?'Send the PDF to this customer again?':'Refund this test order and revoke its download access? No money will move.'))return;await send('/orders/'+id+'/'+a,{});await load();if(a==='resend'&&$('#admin-dialog').open){const updated=data.find(o=>String(o.id)===id);if(updated){$('#dialog-body').innerHTML=orderDetails(updated);$('#dialog-message').textContent='Email accepted for delivery.';}}message(a==='resend'?'Email accepted for delivery.':'Test order refunded.');}
   if(a==='customer-access'){if(!confirm(r.is_active?'Suspend this account and sign out its sessions?':'Restore this customer account?'))return;await send('/customers/'+id+'/access',{active:!r.is_active},'PUT');await load();message('Customer access updated.');}
   if(a==='customer-orders'){const d=await api('/orders');open('Customer purchases',table(['Order','Book','Status','Total'],d.orders.filter(o=>String(o.user_id)===id).map(o=>['#'+o.id,escape(o.title),escape(o.status),money(o.amount_paise)])));}
   if(a==='revoke'){if(!confirm('Revoke admin access for '+id+' immediately?'))return;await api('/team/'+encodeURIComponent(id),{method:'DELETE'});await load();}
   if(a==='invite'){await send('/team/'+encodeURIComponent(id)+'/invite',{});message('Invitation email sent.');}
   if(a==='export'){const cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replace(/"/g,'""')+'"';const rows=[['Order','Date','Customer','Product','Status','Payment method','Amount INR'],...selectedRows().map(o=>[o.id,o.created_at,o.email,o.title,o.status,o.payment_method,(o.amount_paise/100).toFixed(2)])];const blob=new Blob(['\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='orders.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- }catch(error){message(error.message,'error');}finally{b.disabled=false;}
+ }catch(error){if($('#admin-dialog').open)$('#dialog-message').textContent=error.message;else message(error.message,'error');}finally{b.disabled=false;}
 });
 function setMenu(open){
  const sidebar=$('#admin-sidebar'),mobile=matchMedia('(max-width: 1000px)').matches,restoreFocus=mobile&&!open&&sidebar.contains(document.activeElement);

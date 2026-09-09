@@ -9,12 +9,12 @@ router.use((request, response, next) => { response.setHeader('Cache-Control', 'n
 router.get('/', async (request, response, next) => {
   try {
     const [rows] = await pool.execute(
-      `select u.email, p.full_name, p.mobile, p.updated_at
+      `select u.email, (u.password_hash is not null and u.password_hash <> '') as has_password, p.full_name, p.mobile, p.updated_at
        from users u left join profiles p on p.user_id = u.id where u.id = ? limit 1`,
       [request.session.userId]
     );
     if (!rows.length) return response.status(404).json({ error: 'Account not found.' });
-    response.json({ profile: rows[0] });
+    response.json({ profile: {...rows[0], has_password: Boolean(rows[0].has_password)} });
   } catch (error) {
     next(error);
   }

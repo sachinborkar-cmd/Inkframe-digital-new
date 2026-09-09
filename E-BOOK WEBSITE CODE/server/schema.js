@@ -16,6 +16,8 @@ async function ensureSchema() {
     customer_details: "json null",
     email_sent_at: "datetime null",
     email_attempt_at: "datetime null",
+    email_attempt_count: "int unsigned not null default 0",
+    email_last_error: "varchar(60) null",
     checkout_group: "varchar(80) null"
   };
   for (const [column, definition] of Object.entries(orderColumns)) {

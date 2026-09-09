@@ -1,84 +1,38 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<base href="/">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Checkout — Inkframe Press</title>
-<link rel="stylesheet" href="/assets/css/theme.css">
-<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
-@font-face { font-family: 'Lora'; src: url("/assets/fonts/lora-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
-@font-face { font-family: 'Sora'; src: url("/assets/fonts/sora-wght--extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }</style></head>
-<body>
-
-<header class="site-header">
-  <div class="wrap flex items-center justify-between h-16">
-    <a href="/" class="font-ui font-bold tracking-tight text-lg">Inkframe<span class="accent">.</span></a>
-    <p class="text-sm muted font-ui">Secure checkout</p>
-  </div>
-</header>
-
-<section class="wrap py-14">
-  <a class="flow-back" href="/cart/">&#8592; Back to cart</a>
-  <h1 class="page-title text-3xl md:text-4xl font-bold">Checkout</h1>
-  <div class="mt-10 grid lg:grid-cols-2 gap-10 items-start">
-
-    <div class="card p-7 lg:sticky lg:top-24">
-      <h2 class="font-ui font-semibold text-lg">Order summary</h2>
-      <div id="checkout-items" class="mt-6 space-y-4"></div>
-      <div class="mt-6 pt-6 space-y-2 text-sm border-t" style="border-color:var(--line)">
-        <div class="flex justify-between"><span class="muted">Subtotal</span><span id="checkout-subtotal">₹0</span></div>
-        <div class="flex justify-between"><span class="muted">Discount</span><span id="checkout-discount">₹0</span></div>
-        <div class="flex justify-between"><span class="muted">Taxes</span><span>Included</span></div>
-      </div>
-      <div class="mt-4 pt-4 flex justify-between items-center border-t font-ui" style="border-color:var(--line)">
-        <span class="font-semibold">Total</span><span id="checkout-total" class="text-2xl font-bold">₹0</span>
-      </div>
-      <div class="mt-6"><label class="label" for="coupon">Coupon code</label><div class="flex gap-2"><input class="field" id="coupon" placeholder="Try WELCOME20"><button type="button" class="btn btn-ghost" id="apply-coupon">Apply</button></div><p id="coupon-message" class="text-sm mt-2" aria-live="polite"></p></div>
-      <p class="mt-6 text-sm muted">Instant download after payment · 7-day refund · DRM-free files</p>
-    </div>
-
-    <div class="card p-7">
-      <h2 class="font-ui font-semibold text-lg">Your details</h2>
-      <form id="checkout-form" class="mt-6 space-y-5">
-        <div class="grid sm:grid-cols-2 gap-5">
-          <div><label class="label" for="fn">First name</label><input class="field" id="fn" required=""></div>
-          <div><label class="label" for="ln">Last name</label><input class="field" id="ln" required=""></div>
-        </div>
-        <div><label class="label" for="em">Email (your files go here)</label><input class="field" id="em" type="email" readonly aria-describedby="delivery-note" required="" placeholder="you@example.com"></div>
-        <p id="delivery-note" class="text-sm muted">The PDF will be emailed to your verified sign-in address.</p>
-        <div><label class="label" for="ph">Phone (optional)</label><input class="field" id="ph" type="tel"></div>
-        <div><label class="label" for="ct">Country</label><select class="field" id="ct"><option>India</option><option>Other</option></select></div>
-        <label class="flex gap-3 items-start text-sm muted"><input id="checkout-terms" type="checkbox" class="mt-1" required=""> I agree to the <a href="/terms" class="accent">terms</a> and understand digital purchases are delivered instantly.</label>
-        <div class="card p-4"><strong>Payment method: Test payment</strong><p class="text-sm muted mt-2">Simulate a successful payment. No card or UPI details needed.</p></div><p id="checkout-message" role="status" aria-live="polite" class="text-sm"></p>
-        <button disabled id="checkout-submit" type="submit" class="btn btn-primary btn-lg w-full">Complete test payment</button>
-        <p class="text-xs muted text-center">Test payment: no money will be charged. Completing this step unlocks the ebook and emails the PDF.</p>
-      </form>
-    </div>
-  </div>
-  <section class="mt-14"><p class="eyebrow">Before you go</p><h2 class="text-2xl font-bold mt-2">You may also like</h2><div class="card p-6 mt-5 flex flex-col sm:flex-row gap-5 items-center"><div class="w-20 h-24 rounded-lg bg-[#2b0d08] text-white flex items-center justify-center text-xs font-ui text-center p-3">Meal Prep Planner</div><div class="flex-1"><h3 class="font-bold">90-Minute Meal Prep Planner</h3><p class="muted text-sm mt-1">Printable weekly planner and shopping checklist.</p></div><div class="text-center"><p class="font-ui font-bold">₹149</p><button class="btn btn-ghost mt-2" data-demo-upsell>Add</button></div></div></section>
+<link rel="stylesheet" href="/assets/css/theme.css"><link rel="stylesheet" href="/assets/css/checkout.css">
+<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script>
+</head><body>
+<header class="site-header"></header>
+<main class="wrap checkout-page">
+<a class="flow-back" href="/cart/">&#8592; Back to cart</a>
+<div class="checkout-heading"><p class="eyebrow">ONE STEP FROM YOUR NEXT READ</p><h1>Checkout</h1><p>Review your books and confirm where we should send them.</p></div>
+<div class="checkout-grid">
+<section class="checkout-card checkout-summary" aria-labelledby="summary-title">
+<div class="checkout-card-heading"><span class="checkout-step">01</span><div><h2 id="summary-title">Order summary</h2><p>Your next chapter, ready to download.</p></div></div>
+<div id="checkout-items" class="checkout-items"></div>
+<dl class="checkout-totals"><div><dt>Subtotal</dt><dd id="checkout-subtotal">₹0</dd></div><div><dt>Discount</dt><dd id="checkout-discount">−₹0</dd></div><div><dt>Taxes</dt><dd>Included</dd></div><div class="checkout-total"><dt>Total</dt><dd id="checkout-total">₹0</dd></div></dl>
+<div class="checkout-coupon"><label for="coupon">Have a coupon?</label><div><input class="field" id="coupon" placeholder="Enter coupon code" autocomplete="off" maxlength="40"><button type="button" class="btn btn-ghost" id="apply-coupon">Apply</button></div><p id="coupon-message" role="status"></p></div>
+<div class="checkout-delivery"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></svg><div><strong>Ready for your library</strong><p>Download your PDF after checkout. A copy is also sent to your verified email.</p></div></div>
 </section>
-
-<footer class="border-t" style="border-color:var(--line)">
-  <div class="wrap py-10 text-sm muted font-ui flex flex-wrap gap-6 justify-between">
-    <p>© 2025 Inkframe Press.</p>
-    <nav class="flex gap-6"><a class="nav-link" href="/privacy">Privacy</a><a class="nav-link" href="/terms">Terms</a><a class="nav-link" href="/contact">Contact</a></nav>
-  </div>
-</footer>
-
-<script src="/assets/js/site.js"></script>
-<script src="/assets/js/checkout.js"></script>
-
+<section class="checkout-card checkout-details" aria-labelledby="details-title">
+<div class="checkout-card-heading"><span class="checkout-step">02</span><div><h2 id="details-title">Your details</h2><p>A few details, then you’re ready to read.</p></div></div>
+<form id="checkout-form">
+<div class="checkout-fields"><label for="fn">First name<input class="field" id="fn" autocomplete="given-name" required maxlength="60"></label><label for="ln">Last name <span>(optional)</span><input class="field" id="ln" autocomplete="family-name" maxlength="59"></label></div>
+<label for="em">Delivery email<input class="field" id="em" type="email" autocomplete="email" readonly aria-describedby="delivery-note" required placeholder="you@example.com"></label><p id="delivery-note" class="checkout-hint">Your files will be sent to this verified sign-in address.</p>
+<div class="checkout-fields"><label for="ph">Phone <span>(optional)</span><input class="field" id="ph" type="tel" autocomplete="tel" pattern="[0-9+() -]{7,24}" maxlength="24"></label><label for="ct">Country<select class="field" id="ct" autocomplete="country-name"><option>India</option><option>Other</option></select></label></div>
+<div class="checkout-payment"><span>TEST PAYMENT</span><p>Try the full checkout experience. No money will be charged.</p></div>
+<label class="checkout-terms" for="checkout-terms"><input id="checkout-terms" type="checkbox" required><span>I agree to the <a href="/terms/" target="_blank" rel="noopener">terms</a> and understand that ebooks are delivered digitally.</span></label>
+<p id="checkout-message" role="status" aria-live="polite">Preparing your checkout…</p>
+<button disabled id="checkout-submit" type="submit" class="btn btn-primary">Complete test payment</button>
+<p class="checkout-hint checkout-final-note">Your download will be ready on the next page.</p>
+</form>
+</section>
+</div>
+<p class="checkout-help">Need help before you finish? <a href="/contact/">Contact us</a></p>
+</main>
+<footer class="wrap checkout-footer"><span>© 2026 Inkframe Press</span><nav aria-label="Footer"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/contact/">Contact</a></nav></footer>
+<script src="/assets/js/site.js"></script><script src="/assets/js/checkout.js"></script>
 </body></html>

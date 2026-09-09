@@ -4,14 +4,14 @@
   var discountPaise = 0, appliedCoupon = '', ready = false, submitting = false;
   var key = sessionStorage.getItem('inkframeCheckoutKey') || crypto.randomUUID();
   sessionStorage.setItem('inkframeCheckoutKey', key);
-  function checkoutItems(){var direct=new URLSearchParams(location.search).get('product');return direct?InkframeCart.items().filter(function(item){return item.id===direct}):InkframeCart.items();}
+  function checkoutItems(){var direct=new URLSearchParams(location.search).get('product');return direct?(InkframeCart.products[direct]?[InkframeCart.products[direct]]:[]):InkframeCart.items();}
   function money(value) { return '\u20b9' + Number(value).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}); }
   function render() {
     var items = checkoutItems();
     root.innerHTML = items.length ? '' : '<div class="p-4 rounded-lg bg-[#fff4dc] text-sm">Your cart is empty. <a class="accent" href="/ebooks/">Choose a product</a>.</div>';
     items.forEach(function (item) {
-      var row = document.createElement('div'); row.className = 'flex gap-4 items-center';
-      row.innerHTML = (item.image ? '<img class="w-16 h-20 object-cover rounded" src="'+escape(item.image)+'" alt="">' : '<div class="w-16 h-20 rounded bg-[#2b0d08]"></div>') + '<div class="flex-1"><p class="font-semibold">'+escape(item.title)+'</p><p class="text-sm muted">'+escape(item.detail)+'</p></div><strong class="font-ui">'+money(item.price)+'</strong>';
+      var row = document.createElement('div'); row.className = 'checkout-item';
+      row.innerHTML = (item.image ? '<img src="'+escape(item.image)+'" alt="'+escape(item.title)+' cover">' : '<div class="checkout-cover-placeholder" aria-hidden="true"></div>') + '<div class="checkout-item-copy"><p class="font-semibold">'+escape(item.title)+'</p><p>'+escape(item.detail)+'</p></div><strong>'+money(item.price)+'</strong>';
       root.appendChild(row);
     });
     var subtotal = items.reduce(function(sum,item){return sum+item.price},0), discount = discountPaise / 100, total = Math.max(0, subtotal-discount);
@@ -33,7 +33,7 @@
     await window.InkframeCatalogue;
     var configResponse=await fetch('/api/payments/config'),config=await configResponse.json();
     if(!configResponse.ok||!config.test_enabled)throw Error('Checkout is unavailable until secure live payments are configured.');
-    ready = true; render();
+    ready = true; message.textContent = ''; render();
   }).catch(function(error) { message.textContent = error.message + ' Please reload to try again.'; });
   document.getElementById('checkout-form').addEventListener('submit', async function(event) {
     event.preventDefault();
@@ -52,7 +52,7 @@
         })
       });
       var body = await response.json();
-      if (response.status === 401) { location.href='/signin/?next=/checkout/'; return; }
+      if (response.status === 401) { location.href='/signin/?next='+encodeURIComponent(location.pathname+location.search); return; }
       if (!response.ok) throw new Error(body.error || 'Test payment could not be completed. Please retry.');
       items.forEach(function(item){ InkframeCart.remove(item.id); });
       sessionStorage.removeItem('inkframeCheckoutKey');
