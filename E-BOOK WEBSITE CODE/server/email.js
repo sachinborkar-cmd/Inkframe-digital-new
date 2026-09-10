@@ -26,7 +26,7 @@ async function sendOtpEmail(email, otp, purpose = 'SIGN_IN') {
     from: `"${storeName}" <${process.env.SMTP_USER}>`,
     to: email,
     subject: `${otp} is your ${storeName} verification code`,
-    text: `Your ${storeName} ${purpose === 'PASSWORD_RESET' ? 'password reset' : 'sign-in'} code is ${otp}. It expires in 10 minutes. Do not share this code. If you did not request it, ignore this email.`
+    text: `Your ${storeName} ${purpose === 'PASSWORD_RESET' ? 'password reset' : purpose === 'EMAIL_CHANGE' ? 'email change' : 'sign-in'} code is ${otp}. It expires in 10 minutes. Do not share this code. If you did not request it, ignore this email.`
   });
 }
 

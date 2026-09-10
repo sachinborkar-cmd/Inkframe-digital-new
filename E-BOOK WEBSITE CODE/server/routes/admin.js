@@ -71,6 +71,22 @@ async function product(req,res){
 }
 router.post('/products',wrap(product));router.put('/products/:id',wrap(product));
 router.delete('/products/:id',wrap(async(req,res)=>{await exists('ebooks',req.params.id);await pool.execute("update ebooks set status='archived' where id=?",[req.params.id]);await audit(req,'Product archived',{id:req.params.id});res.json({ok:true});}));
+router.delete('/products/:id/permanent',wrap(async(req,res)=>{
+ const c=await pool.getConnection();
+ try{
+  await c.beginTransaction();
+  const [[book]]=await c.execute('select id,title from ebooks where id=? for update',[req.params.id]);
+  if(!book)fail('Product not found.',404);
+  const [[order]]=await c.execute('select id from orders where ebook_id=? limit 1',[book.id]);
+  if(order)fail('This product has order history and cannot be deleted. Archive it to preserve customer access.',409);
+  const [[coupon]]=await c.execute('select id from coupons where ebook_id=? limit 1',[book.id]);
+  if(coupon)fail('This product is linked to a coupon. Change the coupon’s product selection before deleting it.',409);
+  await c.execute('delete from carts where ebook_id=?',[book.id]);
+  await c.execute('delete from ebooks where id=?',[book.id]);
+  await c.execute('insert into activity_log(user_id,action,details) values (?,?,?)',[req.session.userId,'Product deleted',JSON.stringify(book)]);
+  await c.commit();res.json({ok:true});
+ }catch(e){await c.rollback();if(e.code==='ER_ROW_IS_REFERENCED_2')fail('This product has linked records. Archive it instead.',409);throw e;}finally{c.release();}
+}));
 router.post('/uploads',express.raw({type:['application/pdf','image/png','image/jpeg'],limit:'20mb'}),wrap(async(req,res)=>{
  const data=req.body;if(!Buffer.isBuffer(data)||!data.length)fail('Choose a PDF, PNG or JPEG file (maximum 20 MB).');
  const mime=req.get('Content-Type').split(';')[0];let ext;
@@ -86,6 +102,18 @@ router.post('/uploads',express.raw({type:['application/pdf','image/png','image/j
 router.get('/categories',wrap(async(req,res)=>{const [categories]=await pool.query('select c.*,(select count(*) from ebooks e where e.category_id=c.id) products from categories c order by sort_order,name');res.json({categories});}));
 async function category(req,res){const b=req.body,name=text(b.name,120),slug=slugify(b.slug||name);if(name.length<2||!slug)fail('Category name is required.');const values=[name,text(b.description,3000),b.status==='draft'?'draft':'active',Math.round(number(b.sort_order||0,0,9999)),filePath(b.banner_path,'public')];let id=req.params.id;if(id){await exists('categories',id);await pool.execute('update categories set name=?,description=?,status=?,sort_order=?,banner_path=? where id=?',[...values,id]);}else{const [r]=await pool.execute('insert into categories(name,description,status,sort_order,banner_path,slug) values (?,?,?,?,?,?)',[...values,slug]);id=r.insertId;}await audit(req,'Category saved',{id,name});res.json({id});}
 router.post('/categories',wrap(category));router.put('/categories/:id',wrap(category));
+router.delete('/categories/:id',wrap(async(req,res)=>{
+ const c=await pool.getConnection();
+ try{
+  await c.beginTransaction();
+  const [[category]]=await c.execute('select id,name from categories where id=? for update',[req.params.id]);
+  if(!category)fail('Category not found.',404);
+  await c.execute('update ebooks set category_id=null where category_id=?',[category.id]);
+  await c.execute('delete from categories where id=?',[category.id]);
+  await c.execute('insert into activity_log(user_id,action,details) values (?,?,?)',[req.session.userId,'Category deleted',JSON.stringify(category)]);
+  await c.commit();res.json({ok:true});
+ }catch(e){await c.rollback();throw e;}finally{c.release();}
+}));
 router.get('/coupons',wrap(async(req,res)=>{const [coupons]=await pool.query('select * from coupons order by id desc');res.json({coupons});}));
 async function coupon(req,res){const b=req.body,code=text(b.code,40).toUpperCase(),type=b.type==='flat'?'flat':'percent';if(!/^[A-Z0-9_-]{2,40}$/.test(code))fail('Use letters, numbers, hyphens or underscores for the coupon code.');const value=type==='flat'?paise(b.value):number(b.value,1,100);if(value<=0)fail('Discount must be positive.');const expires=b.expires?text(b.expires,30):null;if(expires&&!/^\d{4}-\d{2}-\d{2}$/.test(expires))fail('Choose a valid expiry date.');const ebook=b.ebook_id?Math.round(number(b.ebook_id,1)):null;if(ebook)await exists('ebooks',ebook);const values=[code,type,value,paise(b.minimum||0),b.limit?Math.round(number(b.limit,1)):null,expires?expires+' 23:59:59':null,b.status==='inactive'?'inactive':'active',ebook];let id=req.params.id;if(id){await exists('coupons',id);await pool.execute('update coupons set code=?,discount_type=?,discount_value=?,minimum_paise=?,usage_limit=?,expires_at=?,status=?,ebook_id=? where id=?',[...values,id]);}else{const [r]=await pool.execute('insert into coupons(code,discount_type,discount_value,minimum_paise,usage_limit,expires_at,status,ebook_id) values (?,?,?,?,?,?,?,?)',values);id=r.insertId;}await audit(req,'Coupon saved',{id,code});res.json({id});}
 router.post('/coupons',wrap(coupon));router.put('/coupons/:id',wrap(coupon));

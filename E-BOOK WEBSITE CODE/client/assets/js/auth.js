@@ -168,6 +168,61 @@
   }
 
   var profileForm = document.getElementById('profile-form');
+  var emailForm = document.getElementById('email-change-form');
+  if (emailForm) {
+    var changeEmail = document.getElementById('change-email');
+    var newEmail = document.getElementById('new-email');
+    var emailOtp = document.getElementById('email-otp');
+    var otpStep = document.getElementById('email-otp-step');
+    var emailSubmit = document.getElementById('email-change-submit');
+    var emailResend = document.getElementById('email-resend');
+    var emailStatus = document.getElementById('email-change-status');
+    var emailBusy = false;
+    function resetEmailStep() {
+      otpStep.hidden = true; emailOtp.required = false; emailOtp.value = '';
+      emailResend.hidden = true; emailSubmit.textContent = 'Send OTP';
+      showError(emailStatus, '');
+    }
+    changeEmail.addEventListener('click', function () {
+      emailForm.hidden = false; changeEmail.setAttribute('aria-expanded', 'true'); newEmail.focus();
+    });
+    document.getElementById('email-cancel').addEventListener('click', function () {
+      if (emailBusy) return;
+      emailForm.reset(); resetEmailStep(); emailForm.hidden = true;
+      changeEmail.setAttribute('aria-expanded', 'false'); changeEmail.focus();
+    });
+    newEmail.addEventListener('input', resetEmailStep);
+    async function sendEmailCode() {
+      var result = await api('/api/profile/email/send-otp', {method:'POST',body:JSON.stringify({email:newEmail.value.trim()})});
+      otpStep.hidden = false; emailOtp.required = true; emailOtp.value = '';
+      emailResend.hidden = false; emailSubmit.textContent = 'Verify & update email';
+      showError(emailStatus, result.message);
+    }
+    async function emailAction(resend) {
+      if (emailBusy || !newEmail.reportValidity() || (!resend && !emailForm.reportValidity())) return;
+      emailBusy = true;
+      emailForm.querySelectorAll('button').forEach(function (button) { button.disabled = true; });
+      newEmail.readOnly = true;
+      try {
+        if (resend || otpStep.hidden) await sendEmailCode();
+        else {
+          var result = await api('/api/profile/email/verify-otp', {method:'POST',body:JSON.stringify({email:newEmail.value.trim(),otp:emailOtp.value.trim()})});
+          profileForm.elements.email.value = result.email;
+          emailForm.reset(); resetEmailStep();
+          emailForm.hidden = true; changeEmail.setAttribute('aria-expanded', 'false');
+          document.getElementById('profile-email-note').textContent = result.message;
+          changeEmail.focus();
+        }
+      } catch (error) { showError(emailStatus, error.message); }
+      finally {
+        emailBusy = false; newEmail.readOnly = false;
+        emailForm.querySelectorAll('button').forEach(function (button) { button.disabled = false; });
+        if (!otpStep.hidden) emailOtp.focus();
+      }
+    }
+    emailForm.addEventListener('submit', function (event) { event.preventDefault(); emailAction(false); });
+    emailResend.addEventListener('click', function () { emailAction(true); });
+  }
   if (profileForm) {
     var profileError = document.getElementById('profile-error');
     api('/api/profile').then(function (result) {

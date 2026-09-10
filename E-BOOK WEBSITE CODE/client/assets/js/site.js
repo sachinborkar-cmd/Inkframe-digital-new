@@ -157,6 +157,16 @@ function showToast(message) {
 
 // Published catalogue and product pages use current admin-managed data.
 window.InkframeCatalogue.then(function(data){
+  // Preset display scores, not customer-review averages. A stable book ID keeps
+  // the score consistent across pages, sorting, filtering and future additions.
+  function bookRating(product) {
+    var score = Number(product.id) % 2 === 0 ? 5 : 4.5;
+    var path = '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01Z"/>';
+    var star = '<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">' + path + '</svg>';
+    var stars = '';
+    for (var i = 0; i < 5; i++) stars += '<span class="book-rating-star' + (i === 4 && score === 4.5 ? ' is-half' : '') + '">' + star + (i === 4 && score === 4.5 ? star : '') + '</span>';
+    return '<p class="book-rating" aria-label="' + score + ' out of 5 stars"><span class="book-rating-value" aria-hidden="true">' + score.toFixed(1) + '</span><span class="book-rating-stars" aria-hidden="true">' + stars + '</span></p>';
+  }
   var escape=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
   if(location.pathname.replace(/\/$/,'')==='/categories'){
     var categoryCard=document.querySelector('.cat-card'),categoryGrid=categoryCard&&categoryCard.parentElement;
@@ -176,7 +186,7 @@ window.InkframeCatalogue.then(function(data){
       if(sort&&sort.value==='price-low')books.sort(function(a,b){return a.price_paise-b.price_paise});
       if(sort&&sort.value==='price-high')books.sort(function(a,b){return b.price_paise-a.price_paise});
       if(sort&&sort.value==='popular')books.sort(function(a,b){return (b.sales||0)-(a.sales||0)});
-      grid.innerHTML=books.map(function(p){return '<a class="book-card" href="/product/?slug='+encodeURIComponent(p.slug)+'">'+(p.cover_path?'<img class="w-full rounded-lg" src="'+escape(p.cover_path)+'" alt="'+escape(p.title)+'">':'<div class="card p-6">PDF ebook</div>')+'<h2 class="font-semibold mt-4">'+escape(p.title)+'</h2><p class="muted text-sm">'+escape(p.author)+'</p><p class="font-ui font-semibold mt-2">INR '+(p.price_paise/100).toLocaleString('en-IN')+'</p></a>'}).join('');
+      grid.innerHTML=books.map(function(p){return '<a class="book-card" href="/product/?slug='+encodeURIComponent(p.slug)+'">'+(p.cover_path?'<img class="w-full rounded-lg" src="'+escape(p.cover_path)+'" alt="'+escape(p.title)+'">':'<div class="card p-6">PDF ebook</div>')+'<h2 class="font-semibold mt-4">'+escape(p.title)+'</h2><p class="muted text-sm">'+escape(p.author)+'</p>'+bookRating(p)+'<p class="font-ui font-semibold mt-2">INR '+(p.price_paise/100).toLocaleString('en-IN')+'</p></a>'}).join('');
       document.querySelectorAll('[data-filter]').forEach(function(c){c.classList.toggle('is-active',c.dataset.filter===category)});
       var count=document.getElementById('title-count'),empty=document.getElementById('empty-state');if(count)count.textContent=books.length+' titles';if(empty)empty.classList.toggle('hidden',books.length>0);
     }
@@ -186,7 +196,7 @@ window.InkframeCatalogue.then(function(data){
   }
   if(document.querySelector('[data-live-title]')){
     var current=data.products.find(function(p){return p.slug==='fitness-for-busy-professionals'});
-    if(current){document.querySelector('[data-live-title]').textContent=current.title;document.querySelector('[data-live-description]').textContent=current.description||'';document.querySelectorAll('[data-live-price]').forEach(function(el){el.textContent='INR '+(current.price_paise/100).toLocaleString('en-IN')});}
+    if(current){document.querySelector('[data-live-title]').textContent=current.title;document.querySelector('[data-live-title]').insertAdjacentHTML('afterend',bookRating(current));document.querySelector('[data-live-description]').textContent=current.description||'';document.querySelectorAll('[data-live-price]').forEach(function(el){el.textContent='INR '+(current.price_paise/100).toLocaleString('en-IN')});}
     else{document.querySelector('[data-live-title]').textContent='This book is currently unavailable';document.querySelectorAll('[data-buy-now],[data-add-cart]').forEach(function(el){el.removeAttribute('data-buy-now');el.removeAttribute('data-add-cart');el.removeAttribute('href');el.setAttribute('aria-disabled','true');el.style.pointerEvents='none';});}
   }
   var detail=document.getElementById('product-detail');
@@ -194,6 +204,7 @@ window.InkframeCatalogue.then(function(data){
     var slug=new URLSearchParams(location.search).get('slug'),p=data.products.find(function(p){return p.slug===slug});
     if(!p){document.getElementById('product-status').textContent='This book is not currently available.';return;}
     document.title=p.title+' | Inkframe Press';document.getElementById('product-status').textContent='';detail.hidden=false;
+    document.getElementById('product-rating').innerHTML=bookRating(p);
     document.getElementById('product-title').textContent=p.title;document.getElementById('product-author').textContent=p.author;document.getElementById('product-description').textContent=p.description||'';document.getElementById('product-price').textContent='INR '+(p.price_paise/100).toLocaleString('en-IN');
     var cover=document.getElementById('product-cover');if(p.cover_path){cover.src=p.cover_path;cover.alt=p.title;}else cover.hidden=true;
     document.getElementById('product-buy').dataset.product=p.slug;document.getElementById('product-cart').dataset.product=p.slug;
@@ -215,9 +226,17 @@ window.InkframeCatalogue.then(function(data){
     document.getElementById('preview-pages').hidden=!(previews.length||p.cover_path);
     document.getElementById('preview-jump').hidden=!(previews.length||p.cover_path);
     var gallery=(p.cover_path?[{path:p.cover_path,caption:'Cover'}]:[]).concat(previews.map(function(page,i){return {path:page.path,caption:page.caption||'Page '+(i+1)};}));
-    document.getElementById('product-previews').innerHTML=gallery.map(function(page){return '<figure><img loading="lazy" src="'+escape(page.path)+'" alt="'+escape(page.caption)+'"><figcaption>'+escape(page.caption)+'</figcaption></figure>';}).join('');
+    document.getElementById('sticky-book-title').textContent=p.title;
+    document.getElementById('sticky-book-price').textContent='INR '+(p.price_paise/100).toLocaleString('en-IN');
+    document.getElementById('sticky-book-buy').href='/checkout/?product='+encodeURIComponent(p.slug);
+    document.getElementById('sticky-book-buy').dataset.product=p.slug;
+    var related=data.products.filter(function(other){return other.slug!==p.slug;}).sort(function(a,b){return Number(b.category_slug===p.category_slug)-Number(a.category_slug===p.category_slug);}).slice(0,4);
+    document.getElementById('related-books').hidden=!related.length;
+    document.getElementById('related-book-grid').innerHTML=related.map(function(book){return '<a class="related-book book-card" href="/product/?slug='+encodeURIComponent(book.slug)+'"><div class="related-cover">'+(book.cover_path?'<img loading="lazy" src="'+escape(book.cover_path)+'" alt="'+escape(book.title)+'">':'<span>PDF ebook</span>')+'</div><h3>'+escape(book.title)+'</h3><p class="related-author">'+escape(book.author)+'</p>'+bookRating(book)+'<p class="related-price">INR '+(book.price_paise/100).toLocaleString('en-IN')+'</p></a>';}).join('');
+    var publisherImages=previews.length?gallery.slice(p.cover_path?1:0):gallery;
+    document.getElementById('product-previews').innerHTML=publisherImages.map(function(page){return '<figure><img loading="lazy" src="'+escape(page.path)+'" alt="'+escape(page.caption)+'"></figure>';}).join('');
     document.getElementById('reader-testimonials').hidden=!testimonials.length;
     document.getElementById('testimonial-jump').hidden=!testimonials.length;
-    document.getElementById('product-testimonials').innerHTML=testimonials.map(function(t){return '<blockquote><p>'+escape(t.quote)+'</p><cite>'+escape(t.name)+'</cite></blockquote>';}).join('');
+    document.getElementById('product-testimonials').innerHTML=testimonials.map(function(t){return '<blockquote>'+bookRating(p)+'<p>'+escape(t.quote)+'</p><cite>'+escape(t.name)+'</cite></blockquote>';}).join('');
   }
 }).catch(function(){var status=document.getElementById('product-status');if(status)status.textContent='Could not load the ebook. Please reload.';});

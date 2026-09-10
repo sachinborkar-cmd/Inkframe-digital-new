@@ -68,7 +68,17 @@ async function ensureSchema() {
     id bigint unsigned not null auto_increment, user_id bigint unsigned null, action varchar(160) not null, details text null,
     created_at timestamp not null default current_timestamp, primary key(id)
   ) engine=InnoDB`);
-  await pool.execute(`insert into categories(name,slug,description,status,sort_order) values ('Performance','performance','Fitness, energy and sustainable high performance.','active',1) on duplicate key update name=values(name)`);
+  // Seed once so an administrator can permanently delete the default category.
+  const seedConnection = await pool.getConnection();
+  try {
+    await seedConnection.beginTransaction();
+    const [seed] = await seedConnection.execute("insert ignore into schema_migrations(name) values ('default-performance-category-v1')");
+    if (seed.affectedRows) await seedConnection.execute(`insert into categories(name,slug,description,status,sort_order) values ('Performance','performance','Fitness, energy and sustainable high performance.','active',1) on duplicate key update slug=values(slug)`);
+    await seedConnection.commit();
+  } catch (error) {
+    await seedConnection.rollback();
+    throw error;
+  } finally { seedConnection.release(); }
   await pool.execute(`update ebooks set description=coalesce(description, ?), cover_path=coalesce(cover_path, ?) where slug=?`, ['A practical, evidence-based system for building strength, eating well, and recovering properly on a busy schedule.','/images/fitness-for-busy-professionals-cover.png','fitness-for-busy-professionals']);
   await pool.execute("update ebooks set pdf_path=coalesce(pdf_path,'server/private/ebooks/fitness-for-busy-professionals.pdf') where slug='fitness-for-busy-professionals'");
   await pool.execute(`insert into coupons(code,discount_type,discount_value,minimum_paise,usage_limit,status) values ('WELCOME20','percent',20,0,100,'active') on duplicate key update code=values(code)`);

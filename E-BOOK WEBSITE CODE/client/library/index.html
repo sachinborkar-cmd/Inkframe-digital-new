@@ -22,9 +22,18 @@
         <form id="profile-form"><fieldset id="profile-fields" disabled>
           <label for="profile-email">Sign-in email<input class="field" id="profile-email" name="email" type="email" autocomplete="email" readonly aria-describedby="profile-email-note"></label>
           <p id="profile-email-note" class="profile-note">Your verified email is used to sign in and receive your ebooks.</p>
+          <button id="change-email" type="button" class="btn btn-ghost" aria-expanded="false" aria-controls="email-change-form">Change email</button>
           <div class="profile-inputs"><label for="profile-name">Full name<input class="field" id="profile-name" name="full_name" autocomplete="name" required minlength="2" maxlength="120" placeholder="Your full name"></label><label for="profile-mobile">Mobile number <span class="muted">(optional)</span><input class="field" id="profile-mobile" name="mobile" type="tel" autocomplete="tel" pattern="[0-9+() -]{7,24}" maxlength="24" placeholder="+91 98765 43210"></label></div>
           <button type="submit" class="btn btn-primary">Save profile</button>
         </fieldset><p id="profile-error" role="status" hidden></p></form>
+        <form id="email-change-form" class="email-change-form" hidden>
+          <h2>Add a new sign-in email</h2>
+          <p class="profile-note">Your current email stays active until you verify the new address. Your purchases stay with your account.</p>
+          <label for="new-email">New email address<input id="new-email" class="field" type="email" autocomplete="email" required maxlength="254"></label>
+          <div id="email-otp-step" hidden><label for="email-otp">Verification code<input id="email-otp" class="field" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit code"></label></div>
+          <div class="email-change-actions"><button id="email-change-submit" type="submit" class="btn btn-primary">Send OTP</button><button id="email-resend" type="button" class="btn btn-ghost" hidden>Resend OTP</button><button id="email-cancel" type="button" class="btn btn-ghost">Cancel</button></div>
+          <p id="email-change-status" class="profile-note" role="status" aria-live="polite" hidden></p>
+        </form>
       </section>
       <section class="profile-security"><h2>Password &amp; account</h2><p id="profile-password-status" class="muted">Checking your sign-in options…</p><p class="profile-note">Create or change your password by verifying a code sent to your email.</p><a id="profile-password-action" href="/forgot-password/?from=library" class="btn btn-ghost">Create or change password</a><div class="profile-signout"><p class="profile-note">Finished reading on this device?</p><button type="button" class="btn btn-ghost" data-logout>Sign out</button></div></section>
     </div>

@@ -4,6 +4,7 @@ const { requireAuth } = require('../middleware');
 
 const router = express.Router();
 router.use(requireAuth);
+router.use(require('./profile-email'));
 router.use((request, response, next) => { response.setHeader('Cache-Control', 'no-store'); next(); });
 
 router.get('/', async (request, response, next) => {

@@ -11,6 +11,12 @@ module.exports = async function securitySchema() {
   await add('users','session_version','int unsigned not null default 0');
   await add('users','is_active','boolean not null default true');
   await add('otp_codes','purpose',"enum('SIGN_IN','PASSWORD_RESET') not null default 'SIGN_IN'");
+  await pool.query(`create table if not exists email_change_codes (
+    user_id bigint unsigned not null primary key, email varchar(254) not null,
+    token char(64) not null, otp_hash varchar(255) not null, attempts int unsigned not null default 0,
+    expires_at datetime not null, consumed_at datetime null,
+    constraint fk_email_change_user foreign key(user_id) references users(id) on delete cascade
+  ) engine=InnoDB`);
   await add('orders','verified_at','datetime null');
   await add('orders','gateway_payment_id','varchar(100) null unique');
   await add('orders','gateway_order_id','varchar(100) null');

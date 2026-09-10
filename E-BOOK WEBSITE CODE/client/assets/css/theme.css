@@ -141,6 +141,12 @@ img{max-width:100%;display:block}
 .cover span{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
 .book-card:hover .cover{transform:translateY(-6px);box-shadow:0 26px 46px -22px rgba(20,19,16,.55)}
 .stars{color:#d9932f;font-size:.78rem;letter-spacing:.08em}
+.book-rating{display:flex;align-items:center;gap:6px;margin:8px 0 0;color:var(--ink);font:400 14px/1.4 Sora,Arial,sans-serif}
+.book-rating-stars{display:inline-flex;align-items:center;gap:1px;color:#ff6800}
+.book-rating-star{position:relative;display:block;width:20px;height:20px;flex:none}
+.book-rating-star svg{display:block;width:20px;height:20px;fill:currentColor;stroke:currentColor;stroke-width:1.2;stroke-linejoin:round}
+.book-rating-star.is-half svg:first-child{fill:none}
+.book-rating-star.is-half svg:last-child{position:absolute;inset:0;clip-path:inset(0 50% 0 0)}
 
 .post-img{aspect-ratio:16/10;border-radius:12px;overflow:hidden}
 .news{background:linear-gradient(135deg,#fdf6f0,#f6e7dd)}

@@ -12,6 +12,8 @@
 .library-profile{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:16px;padding:0;width:min(820px,calc(100% - 32px));max-height:calc(100dvh - 48px);overflow:auto;margin:auto;box-shadow:0 24px 80px #14131030}
 .library-profile::backdrop{background:#1e241e75;backdrop-filter:blur(3px)}
 .profile-dialog-open{overflow:hidden}
+.profile-dialog-heading>div{flex:1;text-align:center;padding-inline:44px}.profile-dialog-heading .profile-close{position:absolute;right:20px;top:22px}
+.email-change-form{margin-top:24px;padding:20px;border:1px solid var(--line);border-radius:12px}.email-change-form label{margin-top:14px}.email-change-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.email-change-actions .btn{font-size:12px;padding:12px 16px}
 .profile-dialog-heading{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:25px 28px;background:var(--bg);border-radius:16px 16px 0 0}
 .profile-dialog-heading .eyebrow{font:600 9px Sora,sans-serif;letter-spacing:1.8px;color:var(--accent);margin:0 0 10px}
 .profile-dialog-heading h2{font:500 28px Lora,serif;margin:0 0 8px}.profile-dialog-heading .muted{font-size:13px;margin:0;line-height:1.6}
