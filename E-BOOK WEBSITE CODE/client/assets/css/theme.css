@@ -19,6 +19,15 @@
   --radius:14px;
 }
 
+/* Native cross-document View Transitions: ignored by unsupported browsers. */
+@view-transition{navigation:auto}
+::view-transition-group(root){animation-duration:280ms;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+::view-transition-old(root){animation:inkframe-page-out 180ms ease both}
+::view-transition-new(root){animation:inkframe-page-in 280ms cubic-bezier(.2,.7,.2,1) both}
+::view-transition-group(*){animation-duration:280ms;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+@keyframes inkframe-page-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes inkframe-page-in{from{opacity:0;transform:translateY(7px)}}
+
 html{scroll-behavior:smooth}
 body{
   margin:0;
@@ -33,9 +42,11 @@ h1,h2,h3,h4,h5,h6,.font-ui,button,nav,label,input,select,textarea,.btn,.chip{
 h1,h2,h3{letter-spacing:0;text-wrap:balance}
 .page-title{width:100%;text-align:center}
 a{text-decoration:none;color:inherit}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 button,input,select,textarea{font:inherit}
 button{border:0;background:none;color:inherit}
 img{max-width:100%;display:block}
+.book-card>img{aspect-ratio:3/4;object-fit:cover;background:#eee8df}
 ::selection{background:var(--accent);color:#fff}
 
 .wrap{max-width:1140px;margin-inline:auto;padding-inline:20px}
@@ -96,7 +107,10 @@ img{max-width:100%;display:block}
 .cart-button{position:relative;display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);transition:.18s ease}
 .cart-button:hover{border-color:var(--ink);transform:translateY(-1px)}
 .cart-count{position:absolute;right:-4px;top:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font:600 10px "Sora",sans-serif;border:2px solid var(--bg)}
+.cart-count-bump{animation:cart-count-bump 220ms ease-out}
+@keyframes cart-count-bump{50%{transform:scale(1.22)}}
 @media(max-width:420px){.site-header .btn{padding:.65rem 1rem}.cart-button{width:40px;height:40px}}
+@media(max-width:600px){.page-loading-product{grid-template-columns:1fr;gap:20px}.page-loading-product .skeleton-cover{width:min(200px,62vw)}.page-loading-product .skeleton-copy{min-height:120px}}
 
 :focus-visible{outline:3px solid rgba(193,68,42,.35);outline-offset:3px}
 
@@ -104,6 +118,8 @@ img{max-width:100%;display:block}
   border-radius:8px;background:var(--ink);color:#fff;font-family:"Sora",sans-serif;font-size:.9rem;
   box-shadow:var(--shadow-md);animation:toast-in .2s ease}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px)}}
+
+.page-loading{display:grid;gap:14px;max-width:680px;padding:24px 0}.skeleton{display:block;border-radius:7px;background:linear-gradient(90deg,#eee9e1 25%,#f7f3ed 37%,#eee9e1 63%);background-size:400% 100%;animation:skeleton-shimmer 1.2s ease infinite}.skeleton-line{height:15px}.skeleton-line.short{width:44%}.skeleton-cover{width:min(260px,72vw);aspect-ratio:3/4}.skeleton-copy{display:grid;align-content:center;gap:16px;min-height:260px}.page-loading-product{grid-template-columns:minmax(180px,260px) minmax(0,1fr);gap:44px}.page-loading-product .skeleton-line:first-child{height:42px;width:75%}@keyframes skeleton-shimmer{to{background-position:-400% 0}}
 
 /* Book mockup */
 .book{position:relative;border-radius:4px 10px 10px 4px;
@@ -181,6 +197,8 @@ img{max-width:100%;display:block}
 @media(max-width:820px){.admin-sidebar{position:static;width:auto}.admin-sidebar .admin-nav{display:none}.admin-sidebar.open .admin-nav{display:grid}.admin-main{margin-left:0;padding:1rem}.admin-mobile-toggle{display:inline-flex}.data-table{min-width:620px}}
 
 [hidden]{display:none!important}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}.cart-count-bump,.toast,.skeleton{animation:none!important}}
 
 /* Explicit exits for customer account and purchase flows. */
 .flow-card{position:relative;padding-top:64px!important}

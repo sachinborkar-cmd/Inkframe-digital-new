@@ -1,3 +1,31 @@
+/*
+ * Progressive, cross-document navigation polish.  This deliberately never
+ * prevents a link's default action: browsers without View Transitions (and
+ * any transition error) continue with ordinary, reliable page navigation.
+ */
+(function () {
+  function bookTransitionName(slug) {
+    return slug && /^[a-z0-9-]+$/i.test(slug) ? 'inkframe-book-' + slug : '';
+  }
+  document.addEventListener('click', function (event) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    var link = event.target.closest('a.book-card[href]');
+    if (!link || link.target || link.hasAttribute('download')) return;
+    var url;
+    try { url = new URL(link.href, location.href); } catch (_) { return; }
+    if (url.origin !== location.origin || url.pathname !== '/product/') return;
+    var slug = url.searchParams.get('slug'), name = bookTransitionName(slug);
+    var cover = link.querySelector('img');
+    if (!name || !cover) return;
+    // Only the selected cover gets a name, avoiding duplicate shared elements.
+    document.querySelectorAll('[data-book-transition-cover]').forEach(function (image) { image.style.viewTransitionName = ''; image.removeAttribute('data-book-transition-cover'); });
+    cover.style.viewTransitionName = name;
+    cover.setAttribute('data-book-transition-cover', '');
+    try { sessionStorage.setItem('inkframeBookTransition', slug); } catch (_) {}
+  }, true);
+  window.InkframeBookTransitionName = bookTransitionName;
+})();
+
 window.InkframeSession = fetch('/api/auth/session', {credentials:'same-origin', cache:'no-store'}).then(function(response) { if (!response.ok) throw new Error('Unable to check sign-in.'); return response.json(); });
 
 window.InkframeCart = (function () {
@@ -17,7 +45,7 @@ window.InkframeCart = (function () {
   function add(id) { var ids = get(); if (products[id] && ids.indexOf(id) === -1) ids.push(id); save(ids); }
   function remove(id) { save(get().filter(function (item) { return item !== id; })); }
   function items() { return get().map(function (id) { return products[id]; }).filter(Boolean); }
-  function updateCount() { var count = get().length; document.querySelectorAll('[data-cart-count]').forEach(function (el) { el.textContent = count; }); }
+  function updateCount() { var count = get().length; document.querySelectorAll('[data-cart-count]').forEach(function (el) { var changed=el.textContent!==String(count); el.textContent = count; if(changed && document.readyState!=='loading'){el.classList.remove('cart-count-bump');void el.offsetWidth;el.classList.add('cart-count-bump');} }); }
   document.addEventListener('DOMContentLoaded', function(){updateCount();window.InkframeSession.then(function(session){authenticated=session.authenticated;if(!authenticated)return;return fetch('/api/store/cart',{credentials:'same-origin'}).then(function(r){return r.json()}).then(function(data){var merged=[...new Set(get().concat((data.items||[]).map(function(item){return item.slug})))];localStorage.setItem('inkframeCart',JSON.stringify(merged));sync(merged);updateCount();window.dispatchEvent(new Event('inkframe:cart'));});}).catch(function(){});});
   return { add: add, remove: remove, items: items, products: products, updateCount: updateCount };
 })();
@@ -186,7 +214,7 @@ window.InkframeCatalogue.then(function(data){
       if(sort&&sort.value==='price-low')books.sort(function(a,b){return a.price_paise-b.price_paise});
       if(sort&&sort.value==='price-high')books.sort(function(a,b){return b.price_paise-a.price_paise});
       if(sort&&sort.value==='popular')books.sort(function(a,b){return (b.sales||0)-(a.sales||0)});
-      grid.innerHTML=books.map(function(p){return '<a class="book-card" href="/product/?slug='+encodeURIComponent(p.slug)+'">'+(p.cover_path?'<img class="w-full rounded-lg" src="'+escape(p.cover_path)+'" alt="'+escape(p.title)+'">':'<div class="card p-6">PDF ebook</div>')+'<h2 class="font-semibold mt-4">'+escape(p.title)+'</h2><p class="muted text-sm">'+escape(p.author)+'</p>'+bookRating(p)+'<p class="font-ui font-semibold mt-2">INR '+(p.price_paise/100).toLocaleString('en-IN')+'</p></a>'}).join('');
+      grid.innerHTML=books.map(function(p){return '<a class="book-card" href="/product/?slug='+encodeURIComponent(p.slug)+'">'+(p.cover_path?'<img class="w-full rounded-lg" src="'+escape(p.cover_path)+'" alt="'+escape(p.title)+'" loading="lazy" decoding="async">':'<div class="card p-6">PDF ebook</div>')+'<h2 class="font-semibold mt-4">'+escape(p.title)+'</h2><p class="muted text-sm">'+escape(p.author)+'</p>'+bookRating(p)+'<p class="font-ui font-semibold mt-2">INR '+(p.price_paise/100).toLocaleString('en-IN')+'</p></a>'}).join('');
       document.querySelectorAll('[data-filter]').forEach(function(c){c.classList.toggle('is-active',c.dataset.filter===category)});
       var count=document.getElementById('title-count'),empty=document.getElementById('empty-state');if(count)count.textContent=books.length+' titles';if(empty)empty.classList.toggle('hidden',books.length>0);
     }
@@ -202,11 +230,12 @@ window.InkframeCatalogue.then(function(data){
   var detail=document.getElementById('product-detail');
   if(detail){
     var slug=new URLSearchParams(location.search).get('slug'),p=data.products.find(function(p){return p.slug===slug});
-    if(!p){document.getElementById('product-status').textContent='This book is not currently available.';return;}
-    document.title=p.title+' | Inkframe Press';document.getElementById('product-status').textContent='';detail.hidden=false;
+    var productStatus=document.getElementById('product-status');
+    if(!p){productStatus.className='';productStatus.textContent='This book is not currently available.';return;}
+    document.title=p.title+' | Inkframe Press';productStatus.hidden=true;detail.hidden=false;
     document.getElementById('product-rating').innerHTML=bookRating(p);
     document.getElementById('product-title').textContent=p.title;document.getElementById('product-author').textContent=p.author;document.getElementById('product-description').textContent=p.description||'';document.getElementById('product-price').textContent='INR '+(p.price_paise/100).toLocaleString('en-IN');
-    var cover=document.getElementById('product-cover');if(p.cover_path){cover.src=p.cover_path;cover.alt=p.title;}else cover.hidden=true;
+    var cover=document.getElementById('product-cover');if(p.cover_path){cover.src=p.cover_path;cover.alt=p.title;try{var selected=sessionStorage.getItem('inkframeBookTransition');if(selected===p.slug&&window.InkframeBookTransitionName){cover.style.viewTransitionName=window.InkframeBookTransitionName(p.slug);sessionStorage.removeItem('inkframeBookTransition');}}catch(_){};}else cover.hidden=true;
     document.getElementById('product-buy').dataset.product=p.slug;document.getElementById('product-cart').dataset.product=p.slug;
     var list=function(value){return typeof value==='string'?JSON.parse(value):value||[];};
     var previews=list(p.preview_pages),testimonials=list(p.testimonials);
@@ -239,4 +268,4 @@ window.InkframeCatalogue.then(function(data){
     document.getElementById('testimonial-jump').hidden=!testimonials.length;
     document.getElementById('product-testimonials').innerHTML=testimonials.map(function(t){return '<blockquote>'+bookRating(p)+'<p>'+escape(t.quote)+'</p><cite>'+escape(t.name)+'</cite></blockquote>';}).join('');
   }
-}).catch(function(){var status=document.getElementById('product-status');if(status)status.textContent='Could not load the ebook. Please reload.';});
+}).catch(function(){var status=document.getElementById('product-status');if(status){status.className='';status.textContent='Could not load the ebook. Please reload.';}});
