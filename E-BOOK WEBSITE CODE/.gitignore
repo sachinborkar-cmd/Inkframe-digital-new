@@ -4,3 +4,6 @@ npm-debug.log*
 .tmp/
 /backup-before-restructure/
 /backup-git-before-restructure/
+test-results/
+playwright-report/
+*.tgz

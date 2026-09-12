@@ -2,6 +2,12 @@ const express = require('express');
 const pool = require('../database');
 const { requireAuth } = require('../middleware');
 const router = express.Router();
+router.use((req,res,next)=>{
+  const b=req.body;
+  if(b && ((b.slugs!==undefined && (!Array.isArray(b.slugs)||b.slugs.length>50||b.slugs.some(s=>!require('../input-validation').validSlug(s)))) ||
+    (b.code!==undefined && (typeof b.code!=='string'||b.code.length>40)))) return res.status(400).json({error:'Invalid product selection or coupon code.'});
+  next();
+});
 
 router.get('/products', async (req,res,next)=>{try {const [products]=await pool.query("select e.id,e.slug,e.title,e.author,e.price_paise,e.description,e.cover_path,e.sample_path,e.preview_pages,e.testimonials,c.slug category_slug,c.name category_name from ebooks e left join categories c on c.id=e.category_id where e.status='published' order by e.created_at desc");const [categories]=await pool.query("select id,name,slug,description,banner_path from categories where status='active' order by sort_order,name");const [settings]=await pool.query("select setting_key,setting_value from store_settings where setting_key in ('store_name','support_email')");for(const product of products){if(product.sample_path&&!await require('../sample-files').safeSample(product.sample_path))product.sample_path=null;}res.json({products,categories,settings:Object.fromEntries(settings.map(s=>[s.setting_key,s.setting_value]))});}catch(e){next(e);}});
 router.get('/cart', requireAuth, async (req, res, next) => { try { const [items] = await pool.execute(`select e.id,e.slug,e.title,e.author,e.price_paise,e.cover_path from carts c join ebooks e on e.id=c.ebook_id where c.user_id=? and e.status='published'`, [req.session.userId]); res.json({ items }); } catch(e){ next(e); } });

@@ -6,7 +6,8 @@ const {paidCondition}=require('../purchase-access');
 const router = express.Router();
 router.use(requireAuth);
 
-router.get('/:slug/download', async (request, response, next) => {
+router.get('/:slug/download', require('../rate-limit').limit('library-download',60,900), async (request, response, next) => {
+  if (!require('../input-validation').validSlug(request.params.slug)) return response.status(400).json({error:'Invalid book slug.'});
   try {
     const [[order]] = await pool.execute(`select o.id,e.pdf_path,e.title from orders o join ebooks e on e.id=o.ebook_id where o.user_id=? and ${paidCondition()} and e.slug=? order by o.id desc limit 1`, [request.session.userId, request.params.slug]);
     if (!order) return response.status(403).json({error:'Purchase this book to download it.'});

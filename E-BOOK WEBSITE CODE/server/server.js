@@ -1,4 +1,5 @@
-require('dotenv').config();
+require('dotenv').config({quiet:true});
+require('./environment').validateEnvironment();
 
 const path = require('node:path');
 const express = require('express');
@@ -24,12 +25,8 @@ const production = process.env.NODE_ENV === 'production';
 
 if (production) app.set('trust proxy', 1);
 app.disable('x-powered-by');
-app.use((request, response, next) => {
-  response.setHeader('X-Content-Type-Options', 'nosniff');
-  response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  next();
-});
+app.use(require('./security-headers').securityHeaders);
+app.use(require('./security-log').securityLog);
 app.use(cors({ origin: process.env.APP_ORIGIN || `http://localhost:${port}`, credentials: true }));
 app.use('/api/admin/products', express.json({ limit: '128kb' }));
 app.use(express.json({ limit: '20kb' }));
@@ -75,7 +72,7 @@ app.get('/api/payments/config',(req,res)=>res.json({live_enabled:false,test_enab
 
 app.get(['/library', '/library/'], (request, response) => {
   if (!request.session.userId) return response.redirect('/signin/?next=/library/');
-  response.sendFile(path.join(root, 'library', 'index.html'));
+    response.sendFile(path.join(root, 'library', 'index.html'));
 });
 
 app.get(['/cart', '/cart/'], (request, response) => {
@@ -122,10 +119,11 @@ app.use((error, request, response, next) => {
   console.error('Request failed:', error.code || error.type || 'internal_error');
   if (response.headersSent) return next(error);
   if (error.type === 'entity.too.large') return response.status(413).json({error:'This upload or request is too large.'});
+  if (error.type === 'entity.parse.failed' || error instanceof URIError) return response.status(400).json({error:'Malformed request.'});
   response.status(500).json({ error: 'An unexpected server error occurred.' });
 });
 
-ensureSchema().then(() => {
+if (require.main === module) ensureSchema().then(() => {
   const server = app.listen(port);
   server.once('listening', () => {
     console.log(`Inkframe Press is running at http://localhost:${port}`);
@@ -133,10 +131,12 @@ ensureSchema().then(() => {
     server.once('close', stopDeliveryRetries);
   });
   server.once('error', error => {
-    console.error(error.code === 'EADDRINUSE' ? `Port ${port} is already in use. Stop the existing project server before starting this one.` : error);
+    console.error(error.code === 'EADDRINUSE' ? `Port ${port} is already in use. Stop the existing project server before starting this one.` : 'Server startup failed.');
     process.exit(1);
   });
 }).catch((error) => {
-  console.error('Database initialization failed:', error);
+  console.error('Database initialization failed. Check database availability and configuration.');
   process.exit(1);
 });
+
+module.exports = { app, sessionStore };

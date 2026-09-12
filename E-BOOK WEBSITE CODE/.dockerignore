@@ -1,0 +1,15 @@
+**/backup-before-restructure
+**/backup-git-before-restructure
+**/.env
+**/.env.*
+!/.env.example
+**/node_modules
+**/.tmp
+**/.git
+**/.codex
+**/.agents
+tests
+test-results
+playwright-report
+*.zip
+*.tgz

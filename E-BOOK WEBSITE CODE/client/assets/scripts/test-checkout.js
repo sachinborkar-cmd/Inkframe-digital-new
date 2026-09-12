@@ -63,7 +63,7 @@ const oldMode = process.env.NODE_ENV, oldEnabled = process.env.TEST_PAYMENTS_ENA
     assert.equal(order.amount_paise,book.price_paise-Math.floor(book.price_paise*0.2));
     const [[usage]] = await pool.execute('select used_count from coupons where id=?',[couponId]);
     assert.equal(usage.used_count,1);
-    assert.equal((await request('/api/test-checkout/0')).status,404);
+    assert.equal((await request('/api/test-checkout/0')).status,400,'Malformed IDs are rejected before querying orders');
     assert.equal((await request('/api/test-checkout/'+order.id,undefined,false)).status,401);
     await pool.execute('update orders set email_attempt_at=date_sub(now(),interval 3 minute) where id=?',[order.id]);
     failEmail=false;

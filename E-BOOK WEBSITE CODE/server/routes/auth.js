@@ -86,7 +86,7 @@ router.post('/send-otp', async (request, response, next) => {
   }
 });
 
-router.post('/verify-otp', async (request, response, next) => {
+router.post('/verify-otp', require('../rate-limit').limit('otp-verify',50,900), async (request, response, next) => {
   const email = normalizeEmail(request.body.email);
   const otp = String(request.body.otp || '').trim();
   if (!isValidEmail(email) || !/^\d{6}$/.test(otp)) {
@@ -169,7 +169,7 @@ router.post('/google', async (request, response, next) => {
   const clientId = googleClientId();
   if (!clientId) return response.status(503).json({ error: 'Google sign-in is not configured.' });
   const credential = String(request.body.credential || '');
-  if (!credential) return response.status(400).json({ error: 'Google credential is required.' });
+  if (!credential || credential.length > 16384) return response.status(400).json({ error: 'A valid Google credential is required.' });
   try {
     let ticket;
     try {

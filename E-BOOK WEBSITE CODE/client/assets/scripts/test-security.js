@@ -92,6 +92,6 @@ const sha=v=>crypto.createHash('sha256').update(v).digest('hex');
  if(userId)await pool.execute('delete from users where id=?',[userId]);
  if(otherId)await pool.execute('delete from users where id=?',[otherId]);
  for(const scope of ['login-email:','reset-cooldown:','reset-hour:','reset-verify:'])await pool.execute('delete from auth_rate_limits where bucket=?',[sha(scope+email)]);
- for(const scope of ['password-login','password-reset-send','password-reset-verify','password-reset-finish','auth'])await pool.execute('delete from auth_rate_limits where bucket=?',[sha(scope+':ip:'+testIp)]);
+ for(const scope of ['password-login','password-reset-send','password-reset-verify','password-reset-finish','auth','otp-verify','library-download'])await pool.execute('delete from auth_rate_limits where bucket=?',[sha(scope+':ip:'+testIp)]);
  await pool.end();
 }})().catch(e=>{console.error(e);process.exitCode=1;});

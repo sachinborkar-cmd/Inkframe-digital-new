@@ -7,13 +7,15 @@ const {requireAdmin} = require('../middleware');
 const {sendBookEmail, sendAdminInvite} = require('../email');
 const router = express.Router();
 router.use(requireAdmin);
+router.param('id', require('../input-validation').idParam);
+router.param('email', require('../input-validation').emailParam);
 router.use((req,res,next)=>{
   if (!req.session.adminCsrf) req.session.adminCsrf=crypto.randomBytes(32).toString('hex');
   if (!['GET','HEAD'].includes(req.method) && req.get('X-CSRF-Token') !== req.session.adminCsrf) return res.status(403).json({error:'Security check failed. Reload the admin panel.'});
   next();
 });
-const wrap=fn=>async(req,res,next)=>{try{await fn(req,res);}catch(e){if(e.code==='ER_DUP_ENTRY')return res.status(409).json({error:'That code, slug or email already exists.'});if(e.status)return res.status(e.status).json({error:e.message});next(e);}};
-function fail(message,status=400){throw Object.assign(new Error(message),{status});}
+const wrap=fn=>async(req,res,next)=>{try{await fn(req,res);}catch(e){if(e.code==='ER_DUP_ENTRY')return res.status(409).json({error:'That code, slug or email already exists.'});if(e.publicMessage)return res.status(e.status).json({error:e.message});next(e);}};
+function fail(message,status=400){throw Object.assign(new Error(message),{status,publicMessage:true});}
 function text(value,max=255){const s=String(value||'').trim();if(s.length>max)fail('A field is too long.');return s;}
 function number(value,min=0,max=10000000){const n=Number(value);if(!Number.isFinite(n)||n<min||n>max)fail('Enter a valid number.');return n;}
 const slugify=s=>text(s,160).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -35,7 +37,7 @@ function landingFields(b){
  }))];
 }
 const audit=(req,action,details)=>pool.execute('insert into activity_log(user_id,action,details) values (?,?,?)',[req.session.userId,action,JSON.stringify(details)]);
-async function exists(table,id){const [[row]]=await pool.execute(`select id from ${table} where id=?`,[id]);if(!row)fail('Record not found.',404);}
+async function exists(table,id){if(!['ebooks','categories','coupons'].includes(table))throw new Error('Invalid record type.');const [[row]]=await pool.execute(`select id from ${table} where id=?`,[id]);if(!row)fail('Record not found.',404);}
 function filePath(value,kind){value=text(value,500);if(!value)return '';const valid=kind==='pdf'?/^server\/private\/ebooks\/[a-zA-Z0-9-]+\.pdf$/:/^\/(?:assets\/uploads\/[a-zA-Z0-9-]+\.(?:png|jpg|pdf)|images\/[a-zA-Z0-9_.-]+\.(?:png|jpg|jpeg))$/;if(!valid.test(value))fail('Select a valid uploaded file.');return value;}
 router.get('/me',wrap(async(req,res)=>res.json({email:req.session.email,isOwner:req.isOwner,csrf:req.session.adminCsrf})));
 router.get('/dashboard',wrap(async(req,res)=>{

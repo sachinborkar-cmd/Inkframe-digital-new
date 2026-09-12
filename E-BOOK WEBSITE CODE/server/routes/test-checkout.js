@@ -6,6 +6,7 @@ const {requireAuth}=require('../middleware');
 const {deliverOrder}=require('../book-delivery');
 const {paidFile}=require('../book-files');
 const router=express.Router();router.use(requireAuth);
+router.param('id',require('../input-validation').idParam);
 router.use((req,res,next)=>require('../purchase-access').testEnabled()?next():res.status(403).json({error:'Test payments are disabled.'}));
 async function receipt(id,userId){const [[order]]=await pool.execute(`select o.id,o.order_number,o.amount_paise,o.status,o.delivery_email,o.email_sent_at,o.checkout_group,e.title,e.slug,e.pdf_path from orders o join ebooks e on e.id=o.ebook_id where o.id=? and o.user_id=? and o.payment_method='test'`,[id,userId]);return order;}
 async function deliver(o){if(o)await deliverOrder(o.id);}
@@ -14,6 +15,7 @@ function publicOrder(o){const {pdf_path,checkout_group,...rest}=o;return rest;}
 router.post('/',async(req,res,next)=>{
  if(process.env.NODE_ENV==='production'||process.env.TEST_PAYMENTS_ENABLED==='false')return res.status(403).json({error:'Test payments are disabled.'});
  const b=req.body,key=b.checkout_key;
+ if(b.coupon && (typeof b.coupon!=='string'||b.coupon.length>40))return res.status(400).json({error:'Invalid coupon code.'});
  if(!/^[a-zA-Z0-9-]{16,64}$/.test(key||''))return res.status(400).json({error:'Invalid checkout reference.'});
  const slugs=Array.isArray(b.slugs)?[...new Set(b.slugs)]:[];
  if(!slugs.length||slugs.length>20||slugs.some(s=>typeof s!=='string'||!/^[a-z0-9-]{1,160}$/.test(s)))return res.status(400).json({error:'Choose between 1 and 20 published ebooks.'});
