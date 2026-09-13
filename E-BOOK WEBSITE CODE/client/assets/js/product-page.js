@@ -28,19 +28,6 @@
       get('product-cover-placeholder').hidden = false;
       get('product-cover-placeholder').textContent = 'Image unavailable';
     });
-    if (images.length > 1) {
-      images.forEach(function (item, index) {
-        var button = document.createElement('button');
-        button.type = 'button'; button.setAttribute('aria-label', 'Show ' + item.caption);
-        button.setAttribute('aria-pressed', String(index === 0));
-        var image = document.createElement('img'); image.src = item.path; image.alt = ''; image.loading = 'lazy';
-        button.appendChild(image);
-        button.addEventListener('click', function () { selectImage(index); });
-        thumbs.appendChild(button);
-      });
-      art.insertAdjacentElement('afterend', thumbs);
-      selectImage(0);
-    }
     var sticky = get('product-sticky-buy');
     var purchase = document.querySelector('.product-purchase');
     var scheduled = false;

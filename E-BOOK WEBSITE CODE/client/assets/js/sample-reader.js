@@ -89,7 +89,5 @@
     get('reader-pdf-mode').hidden = !pdf;
     get('reader-pages-mode').hidden = !pages.length;
     get('reader-pdf-link').href = pdf;
-    get('cover-sample').addEventListener('click', event => open(event, pages.length ? 'pages' : 'pdf'));
-
   }).catch(() => { /* Keep the existing sample links usable if setup fails. */ });
 })();

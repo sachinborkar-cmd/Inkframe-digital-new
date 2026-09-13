@@ -111,3 +111,11 @@
 .product-previews img{display:block;width:100%;height:auto;object-fit:contain;margin:0 auto}
 .product-testimonials blockquote .book-rating{font:400 13px/1.4 Sora,sans-serif;margin:0 0 18px;white-space:normal}
 @media(max-width:760px){.look-inside>h2{font-size:26px;margin-bottom:20px}.product-previews{gap:16px}.product-previews img{height:auto}}
+
+/* Product hero: let the cover stand on the page without a gallery frame. */
+.product-art{background:transparent;border:0;border-radius:0;padding:0;min-height:490px;overflow:visible}
+.product-art img{max-height:430px}
+.product-thumbnails{display:none!important}
+.related-cover{background:transparent;border-radius:0;padding:0}
+@media(max-width:1000px){.product-art{min-height:440px;padding:0}.product-art img{max-height:390px}}
+@media(max-width:760px){.product-art{min-height:360px;padding:0}.product-art img{height:330px;max-height:330px}.edition-label,.sample-link,.showcase-caption{display:none!important}}

@@ -97,7 +97,9 @@ router.post('/uploads',express.raw({type:['application/pdf','image/png','image/j
  if(mime==='image/jpeg'&&data[0]===255&&data[1]===216&&data[2]===255)ext='jpg';
  if(!ext)fail('File contents do not match its type.');
  const paid=req.query.kind==='paid';if(paid&&ext!=='pdf')fail('Paid books must be PDF files.');
- const dir=paid?'server/private/ebooks':'assets/uploads';const name=crypto.randomUUID()+'.'+ext;
+ let uploadName='file';try{uploadName=decodeURIComponent(req.get('X-Upload-Name')||'file');}catch{}
+ const stem=path.basename(uploadName).replace(/\.[^.]+$/,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,80)||'file';
+ const dir=paid?'server/private/ebooks':'assets/uploads';const name=crypto.randomUUID()+'-'+stem+'.'+ext;
  const absolute=path.resolve(__dirname,'../..',paid?dir:'client/'+dir);await fs.mkdir(absolute,{recursive:true});await fs.writeFile(path.join(absolute,name),data,{flag:'wx'});
  await audit(req,'File uploaded',{kind:paid?'paid':'public',name});res.status(201).json({path:(paid?'':'/')+dir+'/'+name});
 }));

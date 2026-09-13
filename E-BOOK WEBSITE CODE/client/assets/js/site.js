@@ -242,18 +242,17 @@ window.InkframeCatalogue.then(function(data){
     document.querySelector('meta[name="description"]').content=(p.description||p.title).slice(0,160);
     document.getElementById('product-category').textContent=p.category_name?' / '+p.category_name:'';
     document.getElementById('product-cover-placeholder').hidden=Boolean(p.cover_path);
-    var summary=(p.description||'').trim().split(/\n\s*\n/)[0].replace(/\s+/g,' ');
-    document.getElementById('product-summary').textContent=summary.length>220?summary.slice(0,217).replace(/\s+\S*$/,'')+'...':summary;
     document.getElementById('detail-author').textContent=p.author||'Not specified';
     document.getElementById('detail-category').textContent=p.category_name||'';
     document.getElementById('detail-category-row').hidden=!p.category_name;
     document.getElementById('product-seller').textContent=data.settings&&data.settings.store_name||'Inkframe Press';
-    document.getElementById('cover-sample').hidden=!(previews.length||p.sample_path);
-    document.getElementById('sample-help').textContent=(previews.length||p.sample_path)?'Yes. Use "Read sample" near the cover to explore the available sample before you buy.':'A sample has not been added for this book yet. Contact us if you would like more information before buying.';
+    document.getElementById('sample-help').textContent=p.sample_path?'Yes. Select Preview pages above to open the sample PDF.':'A sample PDF has not been added for this book yet. Contact us if you would like more information before buying.';
     document.getElementById('product-description').textContent=p.description||'More information about this ebook will be available soon.';
     document.getElementById('product-buy').href='/checkout/?product='+encodeURIComponent(p.slug);
-    document.getElementById('preview-pages').hidden=!(previews.length||p.cover_path);
-    document.getElementById('preview-jump').hidden=!(previews.length||p.cover_path);
+    document.getElementById('preview-pages').hidden=!previews.length;
+    var previewJump=document.getElementById('preview-jump');
+    previewJump.hidden=!p.sample_path;
+    if(p.sample_path){previewJump.href=p.sample_path;previewJump.target='_blank';previewJump.rel='noopener';}
     var gallery=(p.cover_path?[{path:p.cover_path,caption:'Cover'}]:[]).concat(previews.map(function(page,i){return {path:page.path,caption:page.caption||'Page '+(i+1)};}));
     document.getElementById('sticky-book-title').textContent=p.title;
     document.getElementById('sticky-book-price').textContent='INR '+(p.price_paise/100).toLocaleString('en-IN');
