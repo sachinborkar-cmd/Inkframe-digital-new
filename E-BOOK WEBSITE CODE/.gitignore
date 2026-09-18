@@ -7,3 +7,18 @@ npm-debug.log*
 test-results/
 playwright-report/
 *.tgz
+
+# Local browser/test data
+
+product-browser/
+
+# OS/editor files
+
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local environment files
+
+.env.*
+!.env.example
