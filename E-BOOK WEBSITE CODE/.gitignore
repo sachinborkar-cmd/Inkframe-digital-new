@@ -2,23 +2,32 @@
 node_modules/
 npm-debug.log*
 .tmp/
-/backup-before-restructure/
-/backup-git-before-restructure/
+
+# Local backups
+backup-before-restructure/
+backup-git-before-restructure/
+
+# Test results
 test-results/
 playwright-report/
+
+# Package archives
 *.tgz
 
 # Local browser/test data
-
 product-browser/
 
 # OS/editor files
-
 .DS_Store
 Thumbs.db
 .vscode/
 
 # Local environment files
-
 .env.*
 !.env.example
+
+# Private eBook files
+server/private/ebooks/
+
+# Generated project documentation
+project-structure.txt
