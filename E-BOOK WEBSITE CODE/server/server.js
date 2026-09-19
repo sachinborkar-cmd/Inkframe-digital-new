@@ -124,7 +124,7 @@ app.use((error, request, response, next) => {
 });
 
 if (require.main === module) ensureSchema().then(() => {
-  const server = app.listen(port);
+  const server = app.listen(port, '0.0.0.0');
   server.once('listening', () => {
     console.log(`Inkframe Press is running at http://localhost:${port}`);
     const stopDeliveryRetries = require('./book-delivery').startDeliveryRetries();
