@@ -135,7 +135,7 @@ if (require.main === module) ensureSchema().then(() => {
     process.exit(1);
   });
 }).catch((error) => {
-  console.error('Database initialization failed. Check database availability and configuration.');
+  console.error('Database initialization failed:', error);
   process.exit(1);
 });
 
