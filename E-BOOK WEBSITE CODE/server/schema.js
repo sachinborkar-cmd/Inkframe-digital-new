@@ -197,8 +197,24 @@ async function ensureSchema() {
     await seedConnection.rollback();
     throw error;
   } finally { seedConnection.release(); }
-  await pool.execute(`update ebooks set description=coalesce(description, ?), cover_path=coalesce(cover_path, ?) where slug=?`, ['A practical, evidence-based system for building strength, eating well, and recovering properly on a busy schedule.','/images/fitness-for-busy-professionals-cover.png','fitness-for-busy-professionals']);
-  await pool.execute("update ebooks set pdf_path=coalesce(pdf_path,'server/private/ebooks/fitness-for-busy-professionals.pdf') where slug='fitness-for-busy-professionals'");
+  await pool.execute(`insert into ebooks (slug, title, author, price_paise, pdf_path, status, description, cover_path)
+    values (?, ?, ?, ?, ?, 'published', ?, ?)
+    on duplicate key update
+      title=values(title),
+      price_paise=values(price_paise),
+      description=coalesce(ebooks.description, values(description)),
+      cover_path=coalesce(ebooks.cover_path, values(cover_path)),
+      pdf_path=coalesce(ebooks.pdf_path, values(pdf_path))`,
+    [
+      'fitness-for-busy-professionals',
+      'Fitness for Busy Professionals',
+      'Inkframe Press',
+      49900,
+      'server/private/ebooks/fitness-for-busy-professionals.pdf',
+      'A practical, evidence-based system for building strength, eating well, and recovering properly on a busy schedule.',
+      '/images/fitness-for-busy-professionals-cover.png'
+    ]
+  );
   await pool.execute(`insert into ebooks (slug, title, author, price_paise, pdf_path, status, description, cover_path, sample_path, preview_pages, testimonials)
     values (?, ?, ?, ?, ?, 'published', ?, ?, ?, ?, ?)
     on duplicate key update
