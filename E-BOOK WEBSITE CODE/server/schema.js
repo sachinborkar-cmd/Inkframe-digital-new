@@ -81,6 +81,38 @@ async function ensureSchema() {
   } finally { seedConnection.release(); }
   await pool.execute(`update ebooks set description=coalesce(description, ?), cover_path=coalesce(cover_path, ?) where slug=?`, ['A practical, evidence-based system for building strength, eating well, and recovering properly on a busy schedule.','/images/fitness-for-busy-professionals-cover.png','fitness-for-busy-professionals']);
   await pool.execute("update ebooks set pdf_path=coalesce(pdf_path,'server/private/ebooks/fitness-for-busy-professionals.pdf') where slug='fitness-for-busy-professionals'");
+  await pool.execute(`insert into ebooks (slug, title, author, price_paise, pdf_path, status, description, cover_path, sample_path, preview_pages, testimonials)
+    values (?, ?, ?, ?, ?, 'published', ?, ?, ?, ?, ?)
+    on duplicate key update
+      title=values(title),
+      price_paise=values(price_paise),
+      description=values(description),
+      cover_path=values(cover_path),
+      sample_path=values(sample_path),
+      preview_pages=values(preview_pages),
+      testimonials=values(testimonials),
+      pdf_path=coalesce(ebooks.pdf_path, values(pdf_path))`,
+    [
+      'kids-drawing-book',
+      'Kids Drawing Book',
+      'Inkframe Press',
+      9900,
+      'server/private/ebooks/8ba536b1-b086-47cc-961d-d791aaaf69dc.pdf',
+      'This engaging animal activity and colouring book features 13 large, single-page animal illustrations with thick, clean outlines, making them easy and fun for young children to colour. Along with colouring activities, children can develop early learning skills with a “Count & Colour” activity page, enjoy a fun “Connect the Dots” puzzle, and use a free-draw page to create their own favourite animal. A personalised “This Book Belongs To” page adds a special touch, while a certificate of completion celebrates children’s achievement when they finish the book. A quick how-to-use guide for teachers and parents is also included to make activities easy to use and enjoyable. Perfect for preschools, kindergartens, primary schools, daycare and playgroup activity time, birthday party activity favours, and quiet-time or travel entertainment at home.',
+      '/assets/uploads/7a1c33d0-d3ab-4fc4-9e8f-ff51301f3f56.png',
+      '/assets/uploads/35bc0fed-d733-4630-8b64-c61788e6dad4.pdf',
+      JSON.stringify([
+        { path: '/assets/uploads/09cbb78a-b3c0-41c4-8668-76a9c9c56eb2.png', caption: '' },
+        { path: '/assets/uploads/10f5361c-8723-4919-88f1-5a50e5d6170c.png', caption: '' },
+        { path: '/assets/uploads/43871c4a-a88d-4a16-9190-5bc5b172ae54.png', caption: '' }
+      ]),
+      JSON.stringify([
+        { name: 'Mr. Rao, Primary School Art Teacher', quote: '"I love that the illustrations get slightly more detailed as the book goes on. It means I can hand the same book to my youngest and oldest students and both stay engaged."' },
+        { name: 'Anjali M., Parent', quote: 'My daughter finished the whole book in a week and was so proud of her certificate  she taped it to her bedroom wall!"' },
+        { name: 'Ms. Fernandes, Kindergarten Teacher', quote: 'This colouring book has become a staple during our free-choice time. The activity pages are a nice bonus — my kindergartners don\'t even realise they\'re practising counting while they colour!"' }
+      ])
+    ]
+  );
   await pool.execute(`insert into coupons(code,discount_type,discount_value,minimum_paise,usage_limit,status) values ('WELCOME20','percent',20,0,100,'active') on duplicate key update code=values(code)`);
   await pool.execute(`insert into coupons(code,discount_type,discount_value,minimum_paise,usage_limit,status) values ('LAUNCH10','percent',10,0,100,'active') on duplicate key update code=values(code)`);
 }

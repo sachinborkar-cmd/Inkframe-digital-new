@@ -102,9 +102,13 @@ create table if not exists orders (
   constraint fk_orders_ebook foreign key (ebook_id) references ebooks(id) on delete restrict
 ) engine=InnoDB;
 
-insert into ebooks (slug, title, author, price_paise, pdf_path, epub_path)
-values ('fitness-for-busy-professionals', 'Fitness for Busy Professionals', 'Inkframe Press', 49900, null, null)
+insert into ebooks (slug, title, author, price_paise, pdf_path, epub_path, cover_path, status)
+values
+  ('fitness-for-busy-professionals', 'Fitness for Busy Professionals', 'Inkframe Press', 49900, 'server/private/ebooks/fitness-for-busy-professionals.pdf', null, '/images/fitness-for-busy-professionals-cover.png', 'published'),
+  ('kids-drawing-book', 'Kids Drawing Book', 'Inkframe Press', 9900, 'server/private/ebooks/8ba536b1-b086-47cc-961d-d791aaaf69dc.pdf', null, '/assets/uploads/7a1c33d0-d3ab-4fc4-9e8f-ff51301f3f56.png', 'published')
 on duplicate key update
   title = values(title),
   author = values(author),
-  price_paise = values(price_paise);
+  price_paise = values(price_paise),
+  cover_path = values(cover_path),
+  status = values(status);

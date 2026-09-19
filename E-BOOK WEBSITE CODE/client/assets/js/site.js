@@ -30,7 +30,8 @@ window.InkframeSession = fetch('/api/auth/session', {credentials:'same-origin', 
 
 window.InkframeCart = (function () {
   var products = {
-    'fitness-for-busy-professionals': { id: 'fitness-for-busy-professionals', title: 'Fitness for Busy Professionals', price: 499, detail: '22-page PDF ebook', image: '/assets/images/fitness-for-busy-professionals-cover.png', url: '/ebooks/fitness-for-busy-professionals/' }
+    'kids-drawing-book': { id: 'kids-drawing-book', title: 'Kids Drawing Book', price: 99, detail: 'PDF ebook', image: '/assets/uploads/7a1c33d0-d3ab-4fc4-9e8f-ff51301f3f56.png', url: '/product/?slug=kids-drawing-book' },
+    'fitness-for-busy-professionals': { id: 'fitness-for-busy-professionals', title: 'Fitness for Busy Professionals', price: 499, detail: '22-page PDF ebook', image: '/assets/images/fitness-for-busy-professionals-cover.png', url: '/product/?slug=fitness-for-busy-professionals' }
   };
   function get() { try { var ids=JSON.parse(localStorage.getItem('inkframeCart') || '[]'); return Array.isArray(ids)?ids.filter(function(id){return typeof id==='string'}):[]; } catch (_) { return []; } }
   window.InkframeCatalogue = fetch('/api/store/products').then(function(r){if(!r.ok)throw Error('Could not load the catalogue.');return r.json();}).then(function(data){
