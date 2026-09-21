@@ -4,6 +4,8 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT) || 587,
   secure: Number(process.env.SMTP_PORT) === 465,
+  family: 4,
+  localAddress: '0.0.0.0',
   connectionTimeout: 15000,
   greetingTimeout: 15000,
   socketTimeout: 45000,
