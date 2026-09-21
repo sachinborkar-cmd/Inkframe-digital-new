@@ -70,7 +70,13 @@ router.post('/send-otp', async (request, response, next) => {
       await sendOtpEmail(email, otp);
     } catch (emailError) {
       await pool.execute('delete from otp_codes where id = ?', [otpId]);
-      console.error('OTP email delivery failed.');
+      console.error('OTP email delivery failed:', {
+        message: emailError?.message,
+        code: emailError?.code,
+        command: emailError?.command,
+        response: emailError?.response,
+        responseCode: emailError?.responseCode
+      });
       return response.status(502).json({ error: 'The verification email could not be sent. Please try again later.' });
     }
 
