@@ -2,10 +2,23 @@
   function escape(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
   var root = document.getElementById('checkout-items');
   var discountPaise = 0, appliedCoupon = '', ready = false, submitting = false;
+  var paymentConfig = null;
   var key = sessionStorage.getItem('inkframeCheckoutKey') || crypto.randomUUID();
   sessionStorage.setItem('inkframeCheckoutKey', key);
+
   function checkoutItems(){var direct=new URLSearchParams(location.search).get('product');return direct?(InkframeCart.products[direct]?[InkframeCart.products[direct]]:[]):InkframeCart.items();}
   function money(value) { return '\u20b9' + Number(value).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}); }
+
+  function updateButtonLabel() {
+    var button = document.getElementById('checkout-submit');
+    if (!button || submitting) return;
+    if (paymentConfig && paymentConfig.live_enabled) {
+      button.textContent = 'Proceed to Pay';
+    } else {
+      button.textContent = 'Complete test payment';
+    }
+  }
+
   function render() {
     var items = checkoutItems();
     root.innerHTML = items.length ? '' : '<div class="p-4 rounded-lg bg-[#fff4dc] text-sm">Your cart is empty. <a class="accent" href="/ebooks/">Choose a product</a>.</div>';
@@ -17,9 +30,30 @@
     var subtotal = items.reduce(function(sum,item){return sum+item.price},0), discount = discountPaise / 100, total = Math.max(0, subtotal-discount);
     document.getElementById('checkout-subtotal').textContent=money(subtotal); document.getElementById('checkout-discount').textContent='−'+money(discount); document.getElementById('checkout-total').textContent=money(total);
     document.getElementById('checkout-submit').disabled=!items.length || !ready || submitting;
+    updateButtonLabel();
     return {items:items, subtotal:subtotal, discount:discount, total:total};
   }
+
+  function loadRazorpayScript() {
+    return new Promise(function(resolve, reject) {
+      if (window.Razorpay) return resolve();
+      var existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existing) {
+        existing.addEventListener('load', resolve);
+        existing.addEventListener('error', reject);
+        return;
+      }
+      var script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = function() { reject(new Error('Failed to load Razorpay payment gateway SDK.')); };
+      document.head.appendChild(script);
+    });
+  }
+
   document.getElementById('apply-coupon').addEventListener('click',async function(){var code=document.getElementById('coupon').value.trim().toUpperCase(),message=document.getElementById('coupon-message'),subtotal=checkoutItems().reduce(function(sum,item){return sum+item.price*100},0);try{var response=await fetch('/api/store/coupon',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,slugs:checkoutItems().map(function(item){return item.id})})}),body=await response.json();if(!response.ok)throw new Error(body.error||'Coupon could not be applied.');discountPaise=body.discount_paise;appliedCoupon=body.coupon;message.textContent='Coupon '+body.coupon+' applied.';message.style.color='#26713b';render()}catch(error){discountPaise=0;appliedCoupon='';message.textContent=error.message;message.style.color='var(--accent)';render()}});
+
   var message = document.getElementById('checkout-message');
   fetch('/api/profile', {credentials:'same-origin'}).then(async function(response) {
     if (response.status === 401) { location.href='/signin/?next='+encodeURIComponent(location.pathname+location.search); return; }
@@ -31,35 +65,139 @@
     document.getElementById('em').value = body.profile.email;
     document.getElementById('ph').value = body.profile.mobile || '';
     await window.InkframeCatalogue;
-    var configResponse=await fetch('/api/payments/config'),config=await configResponse.json();
-    if(!configResponse.ok||!config.test_enabled)throw Error('Checkout is unavailable until secure live payments are configured.');
+    var configResponse=await fetch('/api/payments/config');
+    var config=await configResponse.json();
+    if(!configResponse.ok||(!config.live_enabled && !config.test_enabled)) {
+      throw Error('Checkout is unavailable until secure payments are configured.');
+    }
+    paymentConfig = config;
+    if (paymentConfig.live_enabled) {
+      loadRazorpayScript().catch(function(e) {
+        console.warn('Razorpay script preload warning:', e.message);
+      });
+    }
     ready = true; message.textContent = ''; render();
   }).catch(function(error) { message.textContent = error.message + ' Please reload to try again.'; });
+
   document.getElementById('checkout-form').addEventListener('submit', async function(event) {
     event.preventDefault();
     if (!ready || submitting || !this.reportValidity()) return;
     var button = document.getElementById('checkout-submit'), items = checkoutItems();
-    submitting = true; button.disabled = true; button.textContent = 'Processing test payment...';
+    submitting = true; button.disabled = true;
     message.textContent = '';
-    try {
-      var response = await fetch('/api/test-checkout', {
-        method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          checkout_key:key, slugs:items.map(function(item){return item.id}), coupon:appliedCoupon,
-          full_name:(document.getElementById('fn').value+' '+document.getElementById('ln').value).trim(),
-          phone:document.getElementById('ph').value, country:document.getElementById('ct').value,
-          terms:document.getElementById('checkout-terms').checked
-        })
-      });
-      var body = await response.json();
-      if (response.status === 401) { location.href='/signin/?next='+encodeURIComponent(location.pathname+location.search); return; }
-      if (!response.ok) throw new Error(body.error || 'Test payment could not be completed. Please retry.');
-      items.forEach(function(item){ InkframeCart.remove(item.id); });
-      sessionStorage.removeItem('inkframeCheckoutKey');
-      location.href='/thank-you/?order='+encodeURIComponent(body.order.id);
-    } catch(error) {
-      message.textContent=error.message; submitting=false; render(); button.textContent='Complete test payment';
+
+    var payload = {
+      checkout_key: key,
+      slugs: items.map(function(item){return item.id}),
+      coupon: appliedCoupon,
+      full_name: (document.getElementById('fn').value+' '+document.getElementById('ln').value).trim(),
+      phone: document.getElementById('ph').value,
+      country: document.getElementById('ct').value,
+      terms: document.getElementById('checkout-terms').checked
+    };
+
+    if (paymentConfig && paymentConfig.live_enabled) {
+      button.textContent = 'Initializing secure payment...';
+      try {
+        await loadRazorpayScript();
+        var response = await fetch('/api/payments/create-order', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var orderData = await response.json();
+        if (response.status === 401) { location.href='/signin/?next='+encodeURIComponent(location.pathname+location.search); return; }
+        if (!response.ok) throw new Error(orderData.error || 'Could not initiate payment. Please retry.');
+
+        var options = {
+          key: orderData.key_id,
+          amount: orderData.amount,
+          currency: orderData.currency || 'INR',
+          name: 'Inkframe Press',
+          description: 'Digital Ebook Purchase',
+          order_id: orderData.order_id,
+          prefill: {
+            name: orderData.customer ? orderData.customer.name : '',
+            email: orderData.customer ? orderData.customer.email : '',
+            contact: orderData.customer ? orderData.customer.phone : ''
+          },
+          theme: {
+            color: '#0d1322'
+          },
+          handler: async function (razorpayResponse) {
+            button.textContent = 'Verifying payment...';
+            try {
+              var verifyRes = await fetch('/api/payments/verify', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: razorpayResponse.razorpay_order_id,
+                  razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                  razorpay_signature: razorpayResponse.razorpay_signature
+                })
+              });
+              var verifyBody = await verifyRes.json();
+              if (verifyRes.status === 401) { location.href='/signin/?next='+encodeURIComponent(location.pathname+location.search); return; }
+              if (!verifyRes.ok) throw new Error(verifyBody.error || 'Payment verification failed. Please contact support.');
+
+              items.forEach(function(item){ InkframeCart.remove(item.id); });
+              sessionStorage.removeItem('inkframeCheckoutKey');
+              location.href = '/thank-you/?order=' + encodeURIComponent(verifyBody.order_id);
+            } catch (vErr) {
+              submitting = false;
+              message.textContent = vErr.message;
+              updateButtonLabel();
+              render();
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              submitting = false;
+              updateButtonLabel();
+              render();
+            }
+          }
+        };
+
+        var rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (resp) {
+          submitting = false;
+          var detail = (resp && resp.error && resp.error.description) ? resp.error.description : 'Payment failed. Please retry.';
+          message.textContent = detail;
+          updateButtonLabel();
+          render();
+        });
+        rzp.open();
+      } catch (error) {
+        message.textContent = error.message;
+        submitting = false;
+        updateButtonLabel();
+        render();
+      }
+    } else {
+      // Test payment fallback (available only in non-production with TEST_PAYMENTS_ENABLED)
+      button.textContent = 'Processing test payment...';
+      try {
+        var response = await fetch('/api/test-checkout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var body = await response.json();
+        if (response.status === 401) { location.href='/signin/?next='+encodeURIComponent(location.pathname+location.search); return; }
+        if (!response.ok) throw new Error(body.error || 'Test payment could not be completed. Please retry.');
+        items.forEach(function(item){ InkframeCart.remove(item.id); });
+        sessionStorage.removeItem('inkframeCheckoutKey');
+        location.href='/thank-you/?order='+encodeURIComponent(body.order.id);
+      } catch(error) {
+        message.textContent=error.message; submitting=false; updateButtonLabel(); render();
+      }
     }
   });
+
   window.addEventListener('inkframe:cart',render);render();
 })();
+

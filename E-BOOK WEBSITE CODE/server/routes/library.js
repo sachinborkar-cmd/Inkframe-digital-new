@@ -3,6 +3,7 @@ const pool = require('../database');
 const { requireAuth } = require('../middleware');
 
 const {paidCondition}=require('../purchase-access');
+const s3Storage = require('../storage/s3');
 const router = express.Router();
 router.use(requireAuth);
 
@@ -12,7 +13,26 @@ router.get('/:slug/download', require('../rate-limit').limit('library-download',
     const [[order]] = await pool.execute(`select o.id,e.pdf_path,e.title from orders o join ebooks e on e.id=o.ebook_id where o.user_id=? and ${paidCondition()} and e.slug=? order by o.id desc limit 1`, [request.session.userId, request.params.slug]);
     if (!order) return response.status(403).json({error:'Purchase this book to download it.'});
     response.setHeader('Cache-Control', 'private, no-store');
-    response.download(require('../book-files').paidFile(order.pdf_path), order.title.replace(/[^a-zA-Z0-9 -]/g,'').slice(0,100)+'.pdf', async error => {
+    const filename = order.title.replace(/[^a-zA-Z0-9 -]/g,'').slice(0,100)+'.pdf';
+
+    if (s3Storage.isS3Path(order.pdf_path)) {
+      const key = s3Storage.extractS3Key(order.pdf_path);
+      if (!key) return response.status(500).json({error:'Invalid ebook storage configuration.'});
+      try { await pool.execute('update orders set download_count=download_count+1 where id=?',[order.id]); } catch(e) { console.error('Download count update failed.'); }
+
+      if (request.query.stream === 'true') {
+        const { stream, contentLength } = await s3Storage.getEbookObject(key);
+        response.setHeader('Content-Type', 'application/pdf');
+        response.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        if (contentLength) response.setHeader('Content-Length', contentLength);
+        return stream.pipe(response);
+      }
+
+      const presignedUrl = await s3Storage.getEbookDownloadUrl(key, filename, 300);
+      return response.redirect(302, presignedUrl);
+    }
+
+    response.download(require('../book-files').paidFile(order.pdf_path), filename, async error => {
       if (error) return next(error);
       try { await pool.execute('update orders set download_count=download_count+1 where id=?',[order.id]); } catch(e) { console.error('Download count update failed.'); }
     });

@@ -23,5 +23,5 @@ const eligible=books.filter(b=>!c.ebook_id||b.id===c.ebook_id).reduce((sum,b)=>s
 if(!eligible)return res.status(400).json({error:'Coupon does not apply to these products.'});
 res.json({coupon:c.code,discount_paise:Math.min(eligible,c.discount_type==='percent'?Math.floor(eligible*c.discount_value/100):c.discount_value)});
 }catch(e){next(e);}});
-router.post('/orders', requireAuth, (req,res)=>res.status(503).json({error:'Live payment initialization is not configured. No order or charge was created.'}));
+router.post('/orders', requireAuth, require('./payments').createOrder);
 module.exports=router;

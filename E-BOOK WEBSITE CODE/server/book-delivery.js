@@ -2,6 +2,7 @@ const pool = require('./database');
 const {sendBookEmail} = require('./email');
 const {paidFile} = require('./book-files');
 const {paidCondition} = require('./purchase-access');
+const s3Storage = require('./storage/s3');
 
 async function deliverOrder(id) {
   const [[order]] = await pool.execute(`select o.id,o.order_number,o.delivery_email,o.amount_paise,o.payment_method,e.pdf_path,e.title
@@ -13,7 +14,8 @@ async function deliverOrder(id) {
     and (email_attempt_at is null or email_attempt_at<date_sub(now(),interval 2 minute))`, [id]);
   if (!claim.affectedRows) return false;
   try {
-    await sendBookEmail(order.delivery_email, order.order_number, order.amount_paise, paidFile(order.pdf_path), order.title, order.payment_method === 'test');
+    const pdfSource = s3Storage.isS3Path(order.pdf_path) ? order.pdf_path : paidFile(order.pdf_path);
+    await sendBookEmail(order.delivery_email, order.order_number, order.amount_paise, pdfSource, order.title, order.payment_method === 'test');
     await pool.execute('update orders set email_sent_at=now(),email_last_error=null where id=?', [id]);
     return true;
   } catch (error) {

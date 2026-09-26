@@ -4,7 +4,7 @@ const pool=require('../database');
 const {reserveOrderNumbers}=require('../order-numbering');
 const {requireAuth}=require('../middleware');
 const {deliverOrder}=require('../book-delivery');
-const {paidFile}=require('../book-files');
+const {paidFile, checkEbookExists}=require('../book-files');
 const router=express.Router();router.use(requireAuth);
 router.param('id',require('../input-validation').idParam);
 router.use((req,res,next)=>require('../purchase-access').testEnabled()?next():res.status(403).json({error:'Test payments are disabled.'}));
@@ -31,7 +31,7 @@ router.post('/',async(req,res,next)=>{
   if(!ids.length){
    const [books]=await c.query("select id,price_paise,pdf_path from ebooks where slug in ("+slugs.map(()=>'?').join(',')+") and status='published' order by id",slugs);
    if(books.length!==slugs.length){await c.rollback();return res.status(400).json({error:'One or more books are no longer available.'});}
-   for(const book of books)await fs.access(paidFile(book.pdf_path));
+   for(const book of books)await checkEbookExists(book.pdf_path);
    const subtotal=books.reduce((sum,book)=>sum+book.price_paise,0);let discount=0,eligibleId=null,eligibleSubtotal=subtotal;
    if(b.coupon){const [[coupon]]=await c.execute("select * from coupons where code=? and status='active' and (expires_at is null or expires_at>now()) and (usage_limit is null or used_count<usage_limit) for update",[String(b.coupon).trim().toUpperCase()]);if(!coupon||subtotal<coupon.minimum_paise){await c.rollback();return res.status(400).json({error:'Coupon is no longer valid. Remove it or apply another code.'});}eligibleId=coupon.ebook_id;eligibleSubtotal=books.filter(book=>!eligibleId||book.id===eligibleId).reduce((sum,book)=>sum+book.price_paise,0);if(!eligibleSubtotal){await c.rollback();return res.status(400).json({error:'This coupon does not apply to the selected products.'});}discount=Math.min(eligibleSubtotal,coupon.discount_type==='percent'?Math.floor(eligibleSubtotal*coupon.discount_value/100):coupon.discount_value);await c.execute('update coupons set used_count=used_count+1 where id=?',[coupon.id]);}
    const firstOrderNumber=await reserveOrderNumbers(c,books.length);

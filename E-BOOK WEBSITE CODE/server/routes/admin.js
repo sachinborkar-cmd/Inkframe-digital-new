@@ -5,6 +5,7 @@ const path = require('node:path');
 const pool = require('../database');
 const {requireAdmin} = require('../middleware');
 const {sendBookEmail, sendAdminInvite} = require('../email');
+const s3Storage = require('../storage/s3');
 const router = express.Router();
 router.use(requireAdmin);
 router.param('id', require('../input-validation').idParam);
@@ -38,7 +39,7 @@ function landingFields(b){
 }
 const audit=(req,action,details)=>pool.execute('insert into activity_log(user_id,action,details) values (?,?,?)',[req.session.userId,action,JSON.stringify(details)]);
 async function exists(table,id){if(!['ebooks','categories','coupons'].includes(table))throw new Error('Invalid record type.');const [[row]]=await pool.execute(`select id from ${table} where id=?`,[id]);if(!row)fail('Record not found.',404);}
-function filePath(value,kind){value=text(value,500);if(!value)return '';const valid=kind==='pdf'?/^server\/private\/ebooks\/[a-zA-Z0-9-]+\.pdf$/:/^\/(?:assets\/uploads\/[a-zA-Z0-9-]+\.(?:png|jpg|pdf)|images\/[a-zA-Z0-9_.-]+\.(?:png|jpg|jpeg))$/;if(!valid.test(value))fail('Select a valid uploaded file.');return value;}
+function filePath(value,kind){value=text(value,500);if(!value)return '';const valid=kind==='pdf'?(Boolean(/^server\/private\/ebooks\/[a-zA-Z0-9-]+\.pdf$/.test(value))||Boolean(/^s3:ebooks\/[a-zA-Z0-9-]+\.pdf$/.test(value))):/^\/(?:assets\/uploads\/[a-zA-Z0-9-]+\.(?:png|jpg|pdf)|images\/[a-zA-Z0-9_.-]+\.(?:png|jpg|jpeg))$/.test(value);if(!valid)fail('Select a valid uploaded file.');return value;}
 router.get('/me',wrap(async(req,res)=>res.json({email:req.session.email,isOwner:req.isOwner,csrf:req.session.adminCsrf})));
 router.get('/dashboard',wrap(async(req,res)=>{
   const days=Math.round(number(req.query.days||30,1,365));
@@ -60,10 +61,22 @@ async function product(req,res){
  if(cover&&!/\.(png|jpe?g)$/.test(cover))fail('The cover must be a PNG or JPEG image.');
  if(sample&&!sample.endsWith('.pdf'))fail('The sample must be a PDF.');
  if(status==='published'&&!pdf)fail('Upload the paid PDF before publishing.');
- if(pdf)await fs.access(path.resolve(__dirname,'../..',pdf)).catch(()=>fail('The PDF file is missing.'));
+ if(pdf){
+   if(s3Storage.isS3Path(pdf)){
+     const key=s3Storage.extractS3Key(pdf);
+     const exists=await s3Storage.ebookExists(key);
+     if(!exists)fail('The PDF file is missing from S3.');
+   } else {
+     await fs.access(path.resolve(__dirname,'../..',pdf)).catch(()=>fail('The PDF file is missing.'));
+   }
+ }
  if(sample){
    if(!await require('../sample-files').safeSample(sample))fail('Upload a sample excerpt that is different from every paid PDF.');
-   if(pdf){const [paid,preview]=await Promise.all([fs.readFile(path.resolve(__dirname,'../..',pdf)),fs.readFile(path.resolve(__dirname,'../../client','.'+sample))]);if(paid.equals(preview))fail('The sample cannot contain the full paid PDF.');}
+   if(pdf){
+     const paid=s3Storage.isS3Path(pdf)?await s3Storage.getEbookBuffer(s3Storage.extractS3Key(pdf)):await fs.readFile(path.resolve(__dirname,'../..',pdf));
+     const preview=await fs.readFile(path.resolve(__dirname,'../../client','.'+sample));
+     if(paid.equals(preview))fail('The sample cannot contain the full paid PDF.');
+   }
  }
  const values=[title,text(b.author||'Inkframe Press',160),price,text(b.description,15000),cover,status,category,pdf||null,sample||null,...landingFields(b)];
  let id=req.params.id;
@@ -99,6 +112,14 @@ router.post('/uploads',express.raw({type:['application/pdf','image/png','image/j
  const paid=req.query.kind==='paid';if(paid&&ext!=='pdf')fail('Paid books must be PDF files.');
  let uploadName='file';try{uploadName=decodeURIComponent(req.get('X-Upload-Name')||'file');}catch{}
  const stem=path.basename(uploadName).replace(/\.[^.]+$/,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,80)||'file';
+
+ if(paid && s3Storage.isS3Configured()){
+   const key = s3Storage.generateEbookKey(stem);
+   await s3Storage.uploadEbook(key, data, 'application/pdf');
+   await audit(req,'File uploaded to S3',{kind:'paid',key});
+   return res.status(201).json({path:'s3:'+key});
+ }
+
  const dir=paid?'server/private/ebooks':'assets/uploads';const name=crypto.randomUUID()+'-'+stem+'.'+ext;
  const absolute=path.resolve(__dirname,'../..',paid?dir:'client/'+dir);await fs.mkdir(absolute,{recursive:true});await fs.writeFile(path.join(absolute,name),data,{flag:'wx'});
  await audit(req,'File uploaded',{kind:paid?'paid':'public',name});res.status(201).json({path:(paid?'':'/')+dir+'/'+name});
@@ -127,7 +148,8 @@ router.post('/orders/:id/resend',wrap(async(req,res)=>{
  if(!o||o.status!=='paid'||(o.payment_method==='test'?!require('../purchase-access').testEnabled():!o.verified_at))fail('Only verified paid orders can be resent.');
  const pdf=filePath(o.pdf_path||(o.slug==='fitness-for-busy-professionals'?'server/private/ebooks/fitness-for-busy-professionals.pdf':o.slug==='kids-drawing-book'?'server/private/ebooks/8ba536b1-b086-47cc-961d-d791aaaf69dc.pdf':''),'pdf');if(!pdf)fail('Upload the product PDF first.');
  const [claim]=await pool.execute('update orders set email_attempt_at=now(),email_attempt_count=email_attempt_count+1 where id=? and (email_attempt_at is null or email_attempt_at<date_sub(now(),interval 2 minute))',[o.id]);if(!claim.affectedRows)fail('Wait two minutes between delivery attempts.',429);
- try{await sendBookEmail(o.delivery_email||o.email,o.order_number,o.amount_paise,path.resolve(__dirname,'../..',pdf),o.title,o.payment_method==='test');}catch(error){await pool.execute('update orders set email_last_error=? where id=?',[String(error.code||'DELIVERY_FAILED').replace(/[^A-Z0-9_]/gi,'').slice(0,60),o.id]);fail('The email could not be sent. Check the email configuration and try again.',502);}
+ const pdfSource=s3Storage.isS3Path(pdf)?pdf:path.resolve(__dirname,'../..',pdf);
+ try{await sendBookEmail(o.delivery_email||o.email,o.order_number,o.amount_paise,pdfSource,o.title,o.payment_method==='test');}catch(error){await pool.execute('update orders set email_last_error=? where id=?',[String(error.code||'DELIVERY_FAILED').replace(/[^A-Z0-9_]/gi,'').slice(0,60),o.id]);fail('The email could not be sent. Check the email configuration and try again.',502);}
  await pool.execute('update orders set email_sent_at=now(),email_last_error=null where id=?',[o.id]);await audit(req,'Download email resent',{order:o.id});res.json({ok:true});
 }));
 router.post('/orders/:id/refund',wrap(async(req,res)=>{

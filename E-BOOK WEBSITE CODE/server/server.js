@@ -28,6 +28,8 @@ app.disable('x-powered-by');
 app.use(require('./security-headers').securityHeaders);
 app.use(require('./security-log').securityLog);
 app.use(cors({ origin: process.env.APP_ORIGIN || `http://localhost:${port}`, credentials: true }));
+// Razorpay webhook: must receive raw body buffer for HMAC verification and bypass browser CSRF origin check
+app.post('/api/payments/webhook', express.raw({ type: '*/*', limit: '100kb' }), require('./routes/payments').handleWebhook);
 app.use('/api/admin/products', express.json({ limit: '128kb' }));
 app.use(express.json({ limit: '20kb' }));
 app.use(express.urlencoded({ extended: false, limit: '20kb' }));
@@ -65,10 +67,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/store', storeRoutes);
+app.use('/api/payments', require('./routes/payments').router);
 app.use('/api/test-checkout', require('./routes/test-checkout'));
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/analytics', require('./routes/analytics'));
-app.get('/api/payments/config',(req,res)=>res.json({live_enabled:false,test_enabled:require('./purchase-access').testEnabled()}));
 
 app.get(['/library', '/library/'], (request, response) => {
   if (!request.session.userId) return response.redirect('/signin/?next=/library/');

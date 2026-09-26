@@ -8,6 +8,8 @@
     "check": "node --check server/server.js && node --check client/assets/js/auth.js && node --check client/assets/js/site.js",
     "check:email": "node client/assets/scripts/check-email.js",
     "test:checkout": "node client/assets/scripts/test-checkout.js",
+    "test:razorpay": "node client/assets/scripts/test-razorpay.js",
+    "test:s3": "node client/assets/scripts/test-s3.js",
     "test:order-numbering": "node client/assets/scripts/test-order-numbering.js",
     "test:admin": "node client/assets/scripts/test-admin.js",
     "test:product": "node client/assets/scripts/test-product.js",
@@ -17,6 +19,8 @@
     "test:session-store": "node client/assets/scripts/test-session-store.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1141.0",
+    "@aws-sdk/s3-request-presigner": "^3.1141.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
@@ -25,7 +29,9 @@
     "express-session": "^1.18.2",
     "google-auth-library": "^11.0.2",
     "mysql2": "^3.24.4",
-    "nodemailer": "^10.0.3"
+    "nodemailer": "^10.0.3",
+    "razorpay": "^2.9.8",
+    "resend": "^6.30.0"
   },
   "overrides": {
     "express-mysql-session": {
